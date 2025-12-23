@@ -1,11 +1,11 @@
-import { Package, BarChart3, Settings, LucideIcon } from 'lucide-react';
+import { Package, BarChart3, Settings } from 'lucide-react';
 
 export type TabId = 'dashboard' | 'reports' | 'settings';
 
 interface NavItem {
   id: TabId;
   label: string;
-  icon: LucideIcon;
+  icon: React.ComponentType<{ className?: string; size?: number; strokeWidth?: number }>;
 }
 
 const navItems: NavItem[] = [

@@ -3,10 +3,13 @@ import {
   ArrowRight,
   CheckCircle,
   XCircle,
+  Clock,
   User,
   Package,
   Calendar,
   MoreVertical,
+  FileText,
+  Image,
   Play,
   ListOrdered,
 } from 'lucide-react';

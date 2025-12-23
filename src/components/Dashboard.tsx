@@ -69,15 +69,30 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     fetchData();
   };
 
+  // Step Management
+  const handleAddStep = async (name: string) => {
+    await stepService.create(name, steps.length + 1);
+    fetchData();
+  };
+
+  const handleUpdateStep = async (id: string, name: string) => {
+    await stepService.update(id, { name });
+    fetchData();
+  };
+
+  const handleDeleteStep = async (id: string) => {
+    await stepService.delete(id);
+    fetchData();
+  };
+
   // Job Management
   const handleCreateJob = async (data: {
-    order_number?: string;
+    order_number: string;
     customer_name: string;
     product_name: string;
     quantity: number;
     notes?: string;
     due_date?: string;
-    template_id?: string;
   }) => {
     await jobService.create(data);
     fetchData();
