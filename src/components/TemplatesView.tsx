@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ProductionTemplateWithSteps, ProductionStep } from '../types';
+import { ProductionTemplateWithSteps } from '../types';
 import { templateService } from '../services/api';
 import {
   Plus,
