@@ -277,110 +277,108 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         </div>
       ) : (
         <div className="space-y-3">
-            {filteredJobs
-              .sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())
-              .map((job) => {
-                // Use progress from backend (calculated based on job steps)
-                const progress = (job as any).progress ?? 0;
+          {filteredJobs
+            .sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())
+            .map((job) => {
+              // Use progress from backend (calculated based on job steps)
+              const progress = (job as any).progress ?? 0;
 
-                // Card colors based on status
-                const cardStyles = job.status === 'completed'
-                  ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-l-4 border-l-emerald-500 hover:from-emerald-100 hover:to-green-100 shadow-emerald-100'
-                  : job.status === 'pending'
-                    ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-l-amber-500 hover:from-amber-100 hover:to-orange-100 shadow-amber-100'
-                    : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-l-blue-500 hover:from-blue-100 hover:to-indigo-100 shadow-blue-100';
+              // Card colors based on status
+              const cardStyles = job.status === 'completed'
+                ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-l-4 border-l-emerald-500 hover:from-emerald-100 hover:to-green-100 shadow-emerald-100'
+                : job.status === 'pending'
+                  ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-l-amber-500 hover:from-amber-100 hover:to-orange-100 shadow-amber-100'
+                  : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-l-blue-500 hover:from-blue-100 hover:to-indigo-100 shadow-blue-100';
 
-                const progressColor = job.status === 'completed' ? '#10b981' : job.status === 'pending' ? '#f59e0b' : '#3b82f6';
-                const stepTextColor = job.status === 'completed'
-                  ? 'text-emerald-600'
-                  : job.status === 'pending'
-                    ? 'text-amber-600'
-                    : 'text-blue-600';
+              const progressColor = job.status === 'completed' ? '#10b981' : job.status === 'pending' ? '#f59e0b' : '#3b82f6';
+              const stepTextColor = job.status === 'completed'
+                ? 'text-emerald-600'
+                : job.status === 'pending'
+                  ? 'text-amber-600'
+                  : 'text-blue-600';
 
-                // Get current step image URL
-                const currentStepImage = (job as any).current_step_image;
+              // Get current step image URL
+              const currentStepImage = (job as any).current_step_image;
 
-                return (
-                  <div
-                    key={job.id}
-                    onClick={() => handleJobClick(job)}
-                    className={`flex items-center gap-3 p-4 rounded-xl shadow-md transition cursor-pointer active:scale-[0.99] ${cardStyles}`}
-                  >
-                    {/* Progress Circle */}
-                    <div className="relative w-12 h-12 shrink-0">
-                      <svg className="w-12 h-12 -rotate-90">
-                        <circle
-                          cx="24"
-                          cy="24"
-                          r="20"
-                          stroke="#e5e7eb"
-                          strokeWidth="4"
-                          fill="none"
-                        />
-                        <circle
-                          cx="24"
-                          cy="24"
-                          r="20"
-                          stroke={progressColor}
-                          strokeWidth="4"
-                          fill="none"
-                          strokeDasharray={`${(progress / 100) * 125.66} 125.66`}
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                      <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-600">
-                        {progress}%
-                      </span>
-                    </div>
-
-                    {/* Current Step Image Thumbnail - Show for all started jobs */}
-                    {currentStepImage && job.status !== 'pending' && (
-                      <div className="w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
-                        <img
-                          src={uploadService.getFullImageUrl(currentStepImage)}
-                          alt="Step"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-
-                    {/* Job Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-bold text-gray-800 text-sm">
-                          #{job.order_number}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-700 truncate font-medium">{job.product_name}</p>
-                      <p className="text-xs text-gray-500 truncate">{job.customer_name}</p>
-                    </div>
-
-                    {/* Current Step & Status */}
-                    <div className="text-right shrink-0">
-                      <div className={`text-xs font-semibold mb-1 ${stepTextColor}`}>
-                        {job.status === 'completed'
-                          ? 'เสร็จสิ้น'
-                          : job.status === 'pending'
-                            ? 'รอเริ่มงาน'
-                            : job.current_step_name || '-'}
-                      </div>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                        job.status === 'completed'
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : job.status === 'in_progress'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        {job.status === 'completed' ? 'เสร็จสิ้น' : job.status === 'in_progress' ? 'กำลังดำเนินการ' : 'รอดำเนินการ'}
-                      </span>
-                    </div>
-
-                    <ChevronRight className={`w-5 h-5 shrink-0 ${
-                      job.status === 'completed' ? 'text-emerald-400' : job.status === 'pending' ? 'text-amber-400' : 'text-blue-400'
-                    }`} />
+              return (
+                <div
+                  key={job.id}
+                  onClick={() => handleJobClick(job)}
+                  className={`flex items-center gap-3 p-4 rounded-xl shadow-md transition cursor-pointer active:scale-[0.99] ${cardStyles}`}
+                >
+                  {/* Progress Circle */}
+                  <div className="relative w-12 h-12 shrink-0">
+                    <svg className="w-12 h-12 -rotate-90">
+                      <circle
+                        cx="24"
+                        cy="24"
+                        r="20"
+                        stroke="#e5e7eb"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <circle
+                        cx="24"
+                        cy="24"
+                        r="20"
+                        stroke={progressColor}
+                        strokeWidth="4"
+                        fill="none"
+                        strokeDasharray={`${(progress / 100) * 125.66} 125.66`}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-600">
+                      {progress}%
+                    </span>
                   </div>
-                );
-              })}
+
+                  {/* Current Step Image Thumbnail - Show for all started jobs */}
+                  {currentStepImage && job.status !== 'pending' && (
+                    <div className="w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                      <img
+                        src={uploadService.getFullImageUrl(currentStepImage)}
+                        alt="Step"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+
+                  {/* Job Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-bold text-gray-800 text-sm">
+                        #{job.order_number}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700 truncate font-medium">{job.product_name}</p>
+                    <p className="text-xs text-gray-500 truncate">{job.customer_name}</p>
+                  </div>
+
+                  {/* Current Step & Status */}
+                  <div className="text-right shrink-0">
+                    <div className={`text-xs font-semibold mb-1 ${stepTextColor}`}>
+                      {job.status === 'completed'
+                        ? 'เสร็จสิ้น'
+                        : job.status === 'pending'
+                          ? 'รอเริ่มงาน'
+                          : job.current_step_name || '-'}
+                    </div>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${job.status === 'completed'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : job.status === 'in_progress'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-amber-100 text-amber-700'
+                      }`}>
+                      {job.status === 'completed' ? 'เสร็จสิ้น' : job.status === 'in_progress' ? 'กำลังดำเนินการ' : 'รอดำเนินการ'}
+                    </span>
+                  </div>
+
+                  <ChevronRight className={`w-5 h-5 shrink-0 ${job.status === 'completed' ? 'text-emerald-400' : job.status === 'pending' ? 'text-amber-400' : 'text-blue-400'
+                    }`} />
+                </div>
+              );
+            })}
         </div>
       )}
     </>
@@ -446,6 +444,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
           onCancel={handleCancel}
           onStartJob={handleStartJob}
           onDataUpdated={fetchData}
+          user={user}
         />
       )}
     </div>

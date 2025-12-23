@@ -1,6 +1,7 @@
-import { LogOut, Info, ChevronRight, Layers } from 'lucide-react';
+import { LogOut, Info, ChevronRight, Layers, Users } from 'lucide-react';
 import { User as UserType } from '../types';
 import { TemplatesView } from './TemplatesView';
+import { StaffManager } from './StaffManager';
 import { useState } from 'react';
 
 interface SettingsViewProps {
@@ -11,8 +12,17 @@ interface SettingsViewProps {
 
 export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProps) {
   const [showTemplatesManager, setShowTemplatesManager] = useState(false);
+  const [showStaffManager, setShowStaffManager] = useState(false);
   const displayName = user?.name || user?.email?.split('@')[0] || 'User';
   const userInitial = displayName.charAt(0).toUpperCase();
+
+  // Check if user is admin
+  const isAdmin = user?.role === 'admin';
+
+  // If showing staff manager, render StaffManager
+  if (showStaffManager) {
+    return <StaffManager onBack={() => setShowStaffManager(false)} />;
+  }
 
   // If showing templates manager, render TemplatesView
   if (showTemplatesManager) {
@@ -70,6 +80,23 @@ export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProp
             </div>
             <ChevronRight className="w-5 h-5 text-gray-300" />
           </button>
+
+          {/* Staff Management - Admin only */}
+          {isAdmin && (
+            <button
+              onClick={() => setShowStaffManager(true)}
+              className="w-full flex items-center gap-4 px-4 py-4 hover:bg-gray-50 transition text-left"
+            >
+              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                <Users className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-gray-800">จัดการพนักงาน</p>
+                <p className="text-sm text-gray-400">เพิ่ม แก้ไข หรือลบพนักงาน</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-300" />
+            </button>
+          )}
         </div>
       </div>
 

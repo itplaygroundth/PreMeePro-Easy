@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ProductionJob, ProductionStep } from '../types';
+import { ProductionJob, ProductionStep, User as UserType } from '../types';
 import {
   X,
   ArrowRight,
@@ -27,6 +27,7 @@ interface JobDetailModalProps {
   onCancel: (jobId: string) => void;
   onStartJob?: (jobId: string) => Promise<void>;
   onDataUpdated?: () => void;
+  user?: UserType;
 }
 
 export function JobDetailModal({
@@ -39,7 +40,10 @@ export function JobDetailModal({
   onCancel,
   onStartJob,
   onDataUpdated,
+  user,
 }: JobDetailModalProps) {
+  // Check if user can cancel (not staff)
+  const canCancel = user?.role !== 'staff';
   const [showStepDetail, setShowStepDetail] = useState(false);
   const [showStepsManager, setShowStepsManager] = useState(false);
   const [selectedStep, setSelectedStep] = useState<ProductionStep | null>(null);
@@ -301,25 +305,22 @@ export function JobDetailModal({
                         <div
                           key={step.id}
                           onClick={() => isClickable && openStepDetail(step, !isCurrent || isJobFinished)}
-                          className={`flex items-center gap-3 p-2 rounded-lg ${
-                            isCurrent ? 'bg-blue-100' : isCompleted ? 'bg-emerald-50' : 'bg-white'
-                          } ${isClickable ? 'cursor-pointer hover:opacity-80 active:scale-[0.98] transition' : ''}`}
+                          className={`flex items-center gap-3 p-2 rounded-lg ${isCurrent ? 'bg-blue-100' : isCompleted ? 'bg-emerald-50' : 'bg-white'
+                            } ${isClickable ? 'cursor-pointer hover:opacity-80 active:scale-[0.98] transition' : ''}`}
                         >
                           <div
-                            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                              isCurrent
+                            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isCurrent
                                 ? 'bg-blue-500 text-white'
                                 : isCompleted
                                   ? 'bg-emerald-500 text-white'
                                   : 'bg-gray-200 text-gray-500'
-                            }`}
+                              }`}
                           >
                             {isCompleted ? '✓' : index + 1}
                           </div>
                           <span
-                            className={`flex-1 text-sm ${
-                              isCurrent ? 'font-semibold text-blue-700' : isCompleted ? 'text-emerald-700' : 'text-gray-500'
-                            }`}
+                            className={`flex-1 text-sm ${isCurrent ? 'font-semibold text-blue-700' : isCompleted ? 'text-emerald-700' : 'text-gray-500'
+                              }`}
                           >
                             {step.name}
                           </span>
@@ -379,13 +380,13 @@ export function JobDetailModal({
                     className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all font-medium shadow-lg shadow-blue-200"
                   >
                     <ArrowRight className="w-5 h-5" />
-                      ส่ง {nextStep.name}
+                    ส่ง {nextStep.name}
                   </button>
                 ) : null}
               </>
             )}
 
-            {(job.status === 'in_progress' || job.status === 'pending') && (
+            {(job.status === 'in_progress' || job.status === 'pending') && canCancel && (
               <button
                 onClick={handleCancel}
                 className="w-full bg-white hover:bg-red-50 text-red-600 py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition border border-red-200 font-medium"
