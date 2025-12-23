@@ -286,16 +286,27 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               // Card colors based on status
               const cardStyles = job.status === 'completed'
                 ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-l-4 border-l-emerald-500 hover:from-emerald-100 hover:to-green-100 shadow-emerald-100'
-                : job.status === 'pending'
-                  ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-l-amber-500 hover:from-amber-100 hover:to-orange-100 shadow-amber-100'
-                  : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-l-blue-500 hover:from-blue-100 hover:to-indigo-100 shadow-blue-100';
+                : job.status === 'cancelled'
+                  ? 'bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-l-red-500 hover:from-red-100 hover:to-rose-100 shadow-red-100'
+                  : job.status === 'pending'
+                    ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-l-amber-500 hover:from-amber-100 hover:to-orange-100 shadow-amber-100'
+                    : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-l-blue-500 hover:from-blue-100 hover:to-indigo-100 shadow-blue-100';
 
-              const progressColor = job.status === 'completed' ? '#10b981' : job.status === 'pending' ? '#f59e0b' : '#3b82f6';
+              const progressColor = job.status === 'completed'
+                ? '#10b981'
+                : job.status === 'cancelled'
+                  ? '#ef4444'
+                  : job.status === 'pending'
+                    ? '#f59e0b'
+                    : '#3b82f6';
+
               const stepTextColor = job.status === 'completed'
                 ? 'text-emerald-600'
-                : job.status === 'pending'
-                  ? 'text-amber-600'
-                  : 'text-blue-600';
+                : job.status === 'cancelled'
+                  ? 'text-red-600'
+                  : job.status === 'pending'
+                    ? 'text-amber-600'
+                    : 'text-blue-600';
 
               // Get current step image URL
               const currentStepImage = (job as any).current_step_image;
@@ -365,10 +376,10 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                           : job.current_step_name || '-'}
                     </div>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${job.status === 'completed'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : job.status === 'in_progress'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-amber-100 text-amber-700'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : job.status === 'in_progress'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-amber-100 text-amber-700'
                       }`}>
                       {job.status === 'completed' ? 'เสร็จสิ้น' : job.status === 'in_progress' ? 'กำลังดำเนินการ' : 'รอดำเนินการ'}
                     </span>
