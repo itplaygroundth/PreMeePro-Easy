@@ -37,6 +37,37 @@ export const authService = {
   },
 };
 
+// Staff Management
+export const staffService = {
+  getAll: async () => {
+    const response = await api.get('/auth/users');
+    return response.data;
+  },
+  create: async (data: {
+    username: string;
+    password: string;
+    name: string;
+    email?: string;
+    role: 'admin' | 'operator' | 'staff';
+  }) => {
+    const response = await api.post('/auth/users', data);
+    return response.data;
+  },
+  update: async (id: string, data: {
+    name?: string;
+    email?: string;
+    role?: 'admin' | 'operator' | 'staff';
+    password?: string;
+  }) => {
+    const response = await api.put(`/auth/users/${id}`, data);
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete(`/auth/users/${id}`);
+    return response.data;
+  },
+};
+
 // Production Templates
 export const templateService = {
   // Get all templates with steps count

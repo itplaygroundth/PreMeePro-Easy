@@ -64,7 +64,7 @@ export interface User {
   email: string;
   name: string;
   username: string;
-  role: 'admin' | 'operator';
+  role: 'admin' | 'operator' | 'staff';
 }
 
 export interface AuthState {
