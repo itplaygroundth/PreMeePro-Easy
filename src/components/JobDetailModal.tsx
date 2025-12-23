@@ -290,9 +290,11 @@ export function JobDetailModal({
                     {activeSteps.map((step, index) => {
                       // For job steps, compare step_template_id with current_step_id
                       const stepTemplateId = (step as any).step_template_id;
-                      const isCurrent = job.status === 'in_progress' && (stepTemplateId
+                      const isCurrentStep = stepTemplateId
                         ? stepTemplateId === job.current_step_id
-                        : step.id === job.current_step_id);
+                        : step.id === job.current_step_id;
+
+                      const isCurrent = (job.status === 'in_progress' || job.status === 'cancelled') && isCurrentStep;
                       const stepStatus = (step as any).status;
                       const isCompleted = stepStatus === 'completed';
 
@@ -305,15 +307,17 @@ export function JobDetailModal({
                         <div
                           key={step.id}
                           onClick={() => isClickable && openStepDetail(step, !isCurrent || isJobFinished)}
-                          className={`flex items-center gap-3 p-2 rounded-lg ${isCurrent ? 'bg-blue-100' : isCompleted ? 'bg-emerald-50' : 'bg-white'
+                          className={`flex items-center gap-3 p-2 rounded-lg ${isCurrent
+                            ? job.status === 'cancelled' ? 'bg-red-100' : 'bg-blue-100'
+                            : isCompleted ? 'bg-emerald-50' : 'bg-white'
                             } ${isClickable ? 'cursor-pointer hover:opacity-80 active:scale-[0.98] transition' : ''}`}
                         >
                           <div
                             className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isCurrent
-                                ? 'bg-blue-500 text-white'
-                                : isCompleted
-                                  ? 'bg-emerald-500 text-white'
-                                  : 'bg-gray-200 text-gray-500'
+                              ? job.status === 'cancelled' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'
+                              : isCompleted
+                                ? 'bg-emerald-500 text-white'
+                                : 'bg-gray-200 text-gray-500'
                               }`}
                           >
                             {isCompleted ? '✓' : index + 1}
