@@ -12,6 +12,8 @@ import {
     Shield,
     ShieldCheck,
     UserCog,
+    Eye,
+    EyeOff,
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
@@ -22,6 +24,7 @@ interface StaffManagerProps {
 interface StaffForm {
     username: string;
     password: string;
+    confirmPassword: string;
     name: string;
     email: string;
     role: 'admin' | 'operator' | 'staff';
@@ -30,6 +33,7 @@ interface StaffForm {
 const initialForm: StaffForm = {
     username: '',
     password: '',
+    confirmPassword: '',
     name: '',
     email: '',
     role: 'staff',
@@ -63,6 +67,7 @@ export function StaffManager({ onBack }: StaffManagerProps) {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [form, setForm] = useState<StaffForm>(initialForm);
     const [saving, setSaving] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         loadStaff();
@@ -82,6 +87,17 @@ export function StaffManager({ onBack }: StaffManagerProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validate password match
+        if (form.password && form.password !== form.confirmPassword) {
+            Swal.fire({
+                icon: 'error',
+                title: 'รหัสผ่านไม่ตรงกัน',
+                text: 'กรุณากรอกรหัสผ่านให้ตรงกัน',
+            });
+            return;
+        }
+
         setSaving(true);
 
         try {
@@ -127,10 +143,12 @@ export function StaffManager({ onBack }: StaffManagerProps) {
         setForm({
             username: staff.username,
             password: '',
+            confirmPassword: '',
             name: staff.name,
             email: staff.email,
             role: staff.role,
         });
+        setShowPassword(false);
         setShowForm(true);
     };
 
@@ -301,15 +319,53 @@ export function StaffManager({ onBack }: StaffManagerProps) {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     {editingId ? 'รหัสผ่านใหม่ (เว้นว่างถ้าไม่เปลี่ยน)' : 'รหัสผ่าน'}
                                 </label>
-                                <input
-                                    type="password"
-                                    value={form.password}
-                                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                                    placeholder="กรอกรหัสผ่าน"
-                                    required={!editingId}
-                                />
+                                <div className="relative">
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={form.password}
+                                        onChange={(e) => setForm({ ...form, password: e.target.value })}
+                                        className="w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                        placeholder="กรอกรหัสผ่าน"
+                                        required={!editingId}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                    >
+                                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
+                                </div>
                             </div>
+
+                            {/* Confirm Password - only show when creating new or changing password */}
+                            {(!editingId || form.password) && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        ยืนยันรหัสผ่าน
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={form.confirmPassword}
+                                            onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                                            className="w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                            placeholder="กรอกรหัสผ่านอีกครั้ง"
+                                            required={!editingId || !!form.password}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                        >
+                                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        </button>
+                                    </div>
+                                    {form.password && form.confirmPassword && form.password !== form.confirmPassword && (
+                                        <p className="text-red-500 text-xs mt-1">รหัสผ่านไม่ตรงกัน</p>
+                                    )}
+                                </div>
+                            )}
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
