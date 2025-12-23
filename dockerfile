@@ -4,6 +4,10 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
+# Build argument for Vite env (VITE_ vars must be present at build time)
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
+
 # Install optional build tools (git for some packages)
 RUN apk add --no-cache git
 
@@ -15,6 +19,7 @@ RUN npm ci --include=dev
 
 # Copy sources and build the app
 COPY . .
+# Ensure Vite sees the VITE_API_URL during build
 RUN npm run build
 
 # --- Production stage ---
@@ -27,7 +32,7 @@ COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80 for the app
-EXPOSE 80
+EXPOSE 8081
 
 # Basic healthcheck
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
