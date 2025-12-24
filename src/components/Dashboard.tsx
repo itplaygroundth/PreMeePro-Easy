@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useRealtimeSubscription } from '../hooks/useRealtimeSubscription';
 import { ProductionStep, ProductionJob, User } from '../types';
 import { stepService, jobService, uploadService } from '../services/api';
 import { NewJobModal } from './NewJobModal';
@@ -63,6 +64,20 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Realtime updates for jobs
+  useRealtimeSubscription({
+    table: 'pari_production_jobs',
+    onInsert: () => {
+      console.log('New job received');
+      fetchData();
+    },
+    onUpdate: () => {
+      console.log('Job updated');
+      fetchData();
+    },
+    onDelete: () => fetchData(),
+  });
 
   const handleRefresh = () => {
     setRefreshing(true);
