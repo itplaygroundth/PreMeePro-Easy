@@ -70,13 +70,31 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     table: 'pari_production_jobs',
     onInsert: () => {
       console.log('New job received');
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'info',
+        title: 'มีงานใหม่เข้ามา',
+        showConfirmButton: false,
+        timer: 3000
+      });
       fetchData();
     },
     onUpdate: () => {
       console.log('Job updated');
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'info',
+        title: 'มีการอัปเดตงาน',
+        showConfirmButton: false,
+        timer: 3000
+      });
       fetchData();
     },
-    onDelete: () => fetchData(),
+    onDelete: () => {
+      fetchData();
+    },
   });
 
   const handleRefresh = () => {
