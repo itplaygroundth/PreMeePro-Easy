@@ -238,6 +238,18 @@ export const orderService = {
   },
 };
 
+// Notifications & Push Tokens
+export const notificationService = {
+  savePushToken: async (token: string) => {
+    const response = await api.post('/push-token', { token });
+    return response.data;
+  },
+  removePushToken: async (token: string) => {
+    const response = await api.delete('/push-token', { data: { token } });
+    return response.data;
+  },
+};
+
 // Step Details & Attachments
 export const stepDataService = {
   // Get all step data for a job

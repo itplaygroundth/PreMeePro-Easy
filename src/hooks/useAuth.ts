@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { User, AuthState } from '../types';
 import { authService } from '../services/api';
+import { registerForPushNotifications, savePushToken, removePushToken } from '../services/pushNotifications';
 
 export function useAuth() {
   const [authState, setAuthState] = useState<AuthState>({
@@ -50,7 +51,36 @@ export function useAuth() {
     throw new Error('Login failed');
   }, []);
 
-  const logout = useCallback(() => {
+  const loginWithPush = useCallback(async (username: string, password: string) => {
+    try {
+      const user = await login(username, password);
+
+      // Register for push notifications after successful login
+      try {
+        const token = await registerForPushNotifications();
+        if (token) {
+          await savePushToken(token);
+          localStorage.setItem('push_token', token);
+        }
+      } catch (pushError) {
+        console.warn('Failed to register push notifications:', pushError);
+        // Don't fail login if push fails
+      }
+
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  }, [login]);
+
+  const logout = useCallback(async () => {
+    // Remove push token if exists
+    const token = localStorage.getItem('push_token');
+    if (token) {
+      removePushToken(token).catch(console.error);
+      localStorage.removeItem('push_token');
+    }
+
     authService.logout();
     setAuthState({
       user: null,
@@ -62,7 +92,7 @@ export function useAuth() {
   return {
     ...authState,
     loading,
-    login,
+    login: loginWithPush,
     logout,
   };
 }
