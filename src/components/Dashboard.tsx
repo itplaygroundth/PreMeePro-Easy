@@ -68,27 +68,33 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   // Realtime updates for jobs
   useRealtimeSubscription({
     table: 'pari_production_jobs',
-    onInsert: () => {
-      console.log('New job received');
+    onInsert: (newJob: any) => {
+      console.log('New job received', newJob);
       Swal.fire({
         toast: true,
         position: 'top-end',
-        icon: 'info',
-        title: 'มีงานใหม่เข้ามา',
+        icon: 'success',
+        title: `งานใหม่: ${newJob.product_name}`,
+        text: `รหัส: ${newJob.order_number}`,
         showConfirmButton: false,
-        timer: 3000
+        timer: 4000
       });
       fetchData();
     },
-    onUpdate: () => {
-      console.log('Job updated');
+    onUpdate: (updatedJob: any) => {
+      console.log('Job updated', updatedJob);
+
+      // Find step name from steps state
+      const stepName = steps.find(s => s.id === updatedJob.current_step_id)?.name || 'ไม่ระบุ';
+
       Swal.fire({
         toast: true,
         position: 'top-end',
         icon: 'info',
-        title: 'มีการอัปเดตงาน',
+        title: `อัปเดต: ${updatedJob.product_name} (${updatedJob.order_number})`,
+        text: `ขั้นตอน: ${stepName}`,
         showConfirmButton: false,
-        timer: 3000
+        timer: 4000
       });
       fetchData();
     },
