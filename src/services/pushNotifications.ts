@@ -16,45 +16,69 @@ const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
  */
 export async function registerForPushNotifications(): Promise<string | null> {
   // 1. Check if Push Messaging is supported
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.warn('⚠️ Push messaging is not supported in this browser');
+  if (!('serviceWorker' in navigator)) {
+    console.warn('⚠️ Service Worker not supported in this browser');
+    alert('เบราว์เซอร์นี้ไม่รองรับ Service Worker');
+    return null;
+  }
+
+  if (!('PushManager' in window)) {
+    console.warn('⚠️ Push Manager not supported in this browser');
+    // iOS Safari < 16.4 doesn't support Web Push
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      console.warn('⚠️ iOS detected - Web Push requires iOS 16.4+ and app must be installed as PWA');
+    }
     return null;
   }
 
   try {
     // 2. Request Permission
+    console.log('📱 Requesting notification permission...');
     const permission = await Notification.requestPermission();
+    console.log('📱 Permission result:', permission);
+
     if (permission !== 'granted') {
-      console.warn('⚠️ Push notification permission not granted');
+      console.warn('⚠️ Push notification permission not granted:', permission);
       return null;
     }
 
     // 3. Get Service Worker Registration (PWA already registers it)
     // Wait for service worker to be ready
+    console.log('📱 Waiting for Service Worker...');
     const registration = await navigator.serviceWorker.ready;
     console.log('✅ Service Worker ready:', registration.scope);
+    console.log('📱 Service Worker state:', registration.active?.state);
 
     // 4. Validate VAPID Key
     if (!VAPID_PUBLIC_KEY) {
       console.warn('⚠️ VAPID Public Key not found in environment (VITE_VAPID_PUBLIC_KEY). Push subscription skipped.');
-      // Return null gracefully so app doesn't crash, but push won't work yet
       return null;
     }
+    console.log('📱 VAPID Key found, subscribing...');
 
-    // 5. Subscribe to Push Manager
+    // 5. Check existing subscription first
+    const existingSubscription = await registration.pushManager.getSubscription();
+    if (existingSubscription) {
+      console.log('✅ Existing Web Push Subscription found:', existingSubscription.endpoint);
+      return JSON.stringify(existingSubscription);
+    }
+
+    // 6. Subscribe to Push Manager
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
     });
 
-    console.log('✅ Web Push Subscription:', subscription);
+    console.log('✅ New Web Push Subscription created:', subscription.endpoint);
 
-    // 6. Return the subscription as a string (to match 'token' format of backend)
-    // The backend expects a string token. We send the full JSON string.
+    // 7. Return the subscription as a string (to match 'token' format of backend)
     return JSON.stringify(subscription);
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error registering for web push:', error);
+    console.error('❌ Error name:', error?.name);
+    console.error('❌ Error message:', error?.message);
     return null;
   }
 }
