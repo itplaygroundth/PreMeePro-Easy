@@ -1,8 +1,10 @@
-import { LogOut, Info, ChevronRight, Layers, Users } from 'lucide-react';
+import { LogOut, Info, ChevronRight, Layers, Users, Bell } from 'lucide-react';
 import { User as UserType } from '../types';
 import { TemplatesView } from './TemplatesView';
 import { StaffManager } from './StaffManager';
 import { useState } from 'react';
+import { notificationService } from '../services/api';
+import Swal from 'sweetalert2';
 
 interface SettingsViewProps {
   user: UserType;
@@ -13,11 +15,36 @@ interface SettingsViewProps {
 export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProps) {
   const [showTemplatesManager, setShowTemplatesManager] = useState(false);
   const [showStaffManager, setShowStaffManager] = useState(false);
+  const [testingPush, setTestingPush] = useState(false);
   const displayName = user?.name || user?.email?.split('@')[0] || 'User';
   const userInitial = displayName.charAt(0).toUpperCase();
 
   // Check if user is admin
   const isAdmin = user?.role === 'admin';
+
+  // Test push notification
+  const handleTestPush = async () => {
+    setTestingPush(true);
+    try {
+      const result = await notificationService.testPushNotification();
+      Swal.fire({
+        icon: 'success',
+        title: 'ส่งทดสอบแล้ว',
+        text: `ส่งไปยัง ${result.tokensCount} อุปกรณ์`,
+        timer: 3000,
+        showConfirmButton: false,
+      });
+    } catch (error: any) {
+      console.error('Test push failed:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'ไม่สามารถส่งได้',
+        text: error.response?.data?.error || error.response?.data?.hint || error.message,
+      });
+    } finally {
+      setTestingPush(false);
+    }
+  };
 
   // If showing staff manager, render StaffManager
   if (showStaffManager) {
@@ -97,6 +124,34 @@ export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProp
               <ChevronRight className="w-5 h-5 text-gray-300" />
             </button>
           )}
+        </div>
+      </div>
+
+      {/* Notification Settings */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+            การแจ้งเตือน
+          </h3>
+        </div>
+
+        <div className="divide-y divide-gray-100">
+          <button
+            onClick={handleTestPush}
+            disabled={testingPush}
+            className="w-full flex items-center gap-4 px-4 py-4 hover:bg-gray-50 transition text-left disabled:opacity-50"
+          >
+            <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+              <Bell className="w-5 h-5 text-orange-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800">
+                {testingPush ? 'กำลังส่ง...' : 'ทดสอบ Push Notification'}
+              </p>
+              <p className="text-sm text-gray-400">ส่งการแจ้งเตือนทดสอบไปยังอุปกรณ์นี้</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-300" />
+          </button>
         </div>
       </div>
 

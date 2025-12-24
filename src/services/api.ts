@@ -248,6 +248,10 @@ export const notificationService = {
     const response = await api.delete('/push-token', { data: { token } });
     return response.data;
   },
+  testPushNotification: async () => {
+    const response = await api.post('/push-token/test');
+    return response.data;
+  },
 };
 
 // In-App Notifications (notification bell)
