@@ -1,8 +1,8 @@
-import { LogOut, Info, ChevronRight, Layers, Users, Bell } from 'lucide-react';
+import { LogOut, Info, ChevronRight, Layers, Users, Bell, Smartphone } from 'lucide-react';
 import { User as UserType } from '../types';
 import { TemplatesView } from './TemplatesView';
 import { StaffManager } from './StaffManager';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { notificationService } from '../services/api';
 import Swal from 'sweetalert2';
 
@@ -12,15 +12,38 @@ interface SettingsViewProps {
   onDataChanged?: () => void;
 }
 
+interface TokenInfo {
+  id: string;
+  platform: string;
+  type: string;
+  endpoint: string;
+  created_at: string;
+  last_used: string;
+}
+
 export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProps) {
   const [showTemplatesManager, setShowTemplatesManager] = useState(false);
   const [showStaffManager, setShowStaffManager] = useState(false);
   const [testingPush, setTestingPush] = useState(false);
+  const [tokensInfo, setTokensInfo] = useState<{ tokensCount: number; tokens: TokenInfo[] } | null>(null);
   const displayName = user?.name || user?.email?.split('@')[0] || 'User';
   const userInitial = displayName.charAt(0).toUpperCase();
 
   // Check if user is admin
   const isAdmin = user?.role === 'admin';
+
+  // Fetch push tokens info on mount
+  useEffect(() => {
+    const fetchTokensInfo = async () => {
+      try {
+        const info = await notificationService.getPushTokensInfo();
+        setTokensInfo(info);
+      } catch (error) {
+        console.error('Failed to fetch tokens info:', error);
+      }
+    };
+    fetchTokensInfo();
+  }, []);
 
   // Test push notification
   const handleTestPush = async () => {
@@ -136,6 +159,33 @@ export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProp
         </div>
 
         <div className="divide-y divide-gray-100">
+          {/* Registered devices info */}
+          <div className="flex items-center gap-4 px-4 py-4">
+            <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+              <Smartphone className="w-5 h-5 text-green-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800">อุปกรณ์ที่ลงทะเบียน</p>
+              <p className="text-sm text-gray-400">
+                {tokensInfo ? `${tokensInfo.tokensCount} อุปกรณ์` : 'กำลังโหลด...'}
+              </p>
+              {tokensInfo && tokensInfo.tokens.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {tokensInfo.tokens.map((t) => (
+                    <div key={t.id} className="text-xs text-gray-400 flex items-center gap-2">
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                        t.type === 'WebPush' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                      }`}>
+                        {t.type}
+                      </span>
+                      <span>{t.platform}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           <button
             onClick={handleTestPush}
             disabled={testingPush}
@@ -148,7 +198,9 @@ export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProp
               <p className="font-medium text-gray-800">
                 {testingPush ? 'กำลังส่ง...' : 'ทดสอบ Push Notification'}
               </p>
-              <p className="text-sm text-gray-400">ส่งการแจ้งเตือนทดสอบไปยังอุปกรณ์นี้</p>
+              <p className="text-sm text-gray-400">
+                ส่งไปยังทุกอุปกรณ์ ({tokensInfo?.tokensCount || 0} อุปกรณ์)
+              </p>
             </div>
             <ChevronRight className="w-5 h-5 text-gray-300" />
           </button>

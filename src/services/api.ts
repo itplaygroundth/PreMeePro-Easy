@@ -252,6 +252,10 @@ export const notificationService = {
     const response = await api.post('/push-token/test');
     return response.data;
   },
+  getPushTokensInfo: async () => {
+    const response = await api.get('/push-token/info');
+    return response.data;
+  },
 };
 
 // In-App Notifications (notification bell)
