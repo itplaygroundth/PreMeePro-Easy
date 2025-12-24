@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRealtimeSubscription } from '../hooks/useRealtimeSubscription';
+import { registerForPushNotifications, savePushToken } from '../services/pushNotifications';
 import { ProductionStep, ProductionJob, User } from '../types';
 import { stepService, jobService, uploadService } from '../services/api';
 import { NewJobModal } from './NewJobModal';
@@ -64,6 +65,21 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Register for Push Notifications
+  useEffect(() => {
+    const registerPush = async () => {
+      try {
+        const subscription = await registerForPushNotifications();
+        if (subscription) {
+          await savePushToken(subscription);
+        }
+      } catch (error) {
+        console.error('Failed to register for push notifications:', error);
+      }
+    };
+    registerPush();
+  }, []);
 
   // Realtime updates for jobs
   useRealtimeSubscription({
