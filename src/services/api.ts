@@ -238,14 +238,44 @@ export const orderService = {
   },
 };
 
-// Notifications & Push Tokens
+// Push Tokens
 export const notificationService = {
   savePushToken: async (token: string) => {
-    const response = await api.post('/push-token', { token });
+    const response = await api.post('/push-token', { token, platform: 'web' });
     return response.data;
   },
   removePushToken: async (token: string) => {
     const response = await api.delete('/push-token', { data: { token } });
+    return response.data;
+  },
+};
+
+// In-App Notifications (notification bell)
+export const inAppNotificationService = {
+  getAll: async (limit = 50, unreadOnly = false) => {
+    const params: Record<string, any> = { limit };
+    if (unreadOnly) params.unread_only = 'true';
+    const response = await api.get('/notifications/in-app', { params });
+    return response.data;
+  },
+  getUnreadCount: async () => {
+    const response = await api.get('/notifications/in-app/count');
+    return response.data;
+  },
+  markAsRead: async (id: string) => {
+    const response = await api.put(`/notifications/in-app/${id}/read`);
+    return response.data;
+  },
+  markAllAsRead: async () => {
+    const response = await api.put('/notifications/in-app/read-all');
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete(`/notifications/in-app/${id}`);
+    return response.data;
+  },
+  deleteAll: async () => {
+    const response = await api.delete('/notifications/in-app');
     return response.data;
   },
 };

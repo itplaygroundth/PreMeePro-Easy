@@ -38,10 +38,9 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const [showJobDetail, setShowJobDetail] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
 
-  // Notification system
+  // Notification system - notifications are created server-side via notification_queue
   const {
     notifications,
-    addNotification,
     markAsRead,
     markAllAsRead,
     clearNotification,
@@ -93,65 +92,17 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     registerPush();
   }, []);
 
-  // Realtime updates for jobs - use notification bell instead of SweetAlert
+  // Realtime updates for jobs - just refresh data, notifications are created server-side
   useRealtimeSubscription({
     table: 'pari_production_jobs',
     onInsert: (newJob: any) => {
       console.log('New job received', newJob);
-      addNotification({
-        type: 'job_new',
-        title: `งานใหม่: ${newJob.product_name}`,
-        message: `รหัส: ${newJob.order_number} | ลูกค้า: ${newJob.customer_name || '-'}`,
-        data: {
-          jobId: newJob.id,
-          orderNumber: newJob.order_number,
-        },
-      });
+      // Notifications are created server-side via notification_queue table
       fetchData();
     },
-    onUpdate: async (updatedJobPayload: any) => {
+    onUpdate: (updatedJobPayload: any) => {
       console.log('Job updated payload:', updatedJobPayload);
-
-      try {
-        const response = await jobService.getById(updatedJobPayload.id);
-        const fullJob = response.data || response;
-
-        const stepName = fullJob.current_step_name || 'ไม่ระบุ';
-        const productName = fullJob.product_name || updatedJobPayload.product_name;
-        const orderNumber = fullJob.order_number || updatedJobPayload.order_number;
-        const status = fullJob.status || updatedJobPayload.status;
-
-        // Determine notification type based on status
-        let notifType: Notification['type'] = 'job_update';
-        if (status === 'completed') notifType = 'job_completed';
-        else if (status === 'cancelled') notifType = 'job_cancelled';
-
-        addNotification({
-          type: notifType,
-          title: status === 'completed'
-            ? `งานเสร็จสิ้น: ${productName}`
-            : status === 'cancelled'
-              ? `ยกเลิกงาน: ${productName}`
-              : `อัปเดต: ${productName}`,
-          message: status === 'completed' || status === 'cancelled'
-            ? `รหัส: ${orderNumber}`
-            : `ขั้นตอน: ${stepName} | รหัส: ${orderNumber}`,
-          data: {
-            jobId: updatedJobPayload.id,
-            orderNumber,
-            stepName,
-          },
-        });
-      } catch (error) {
-        console.error('Error fetching updated job details:', error);
-        addNotification({
-          type: 'job_update',
-          title: 'มีการอัปเดตงาน',
-          message: 'ข้อมูลงานมีการเปลี่ยนแปลง',
-          data: { jobId: updatedJobPayload.id },
-        });
-      }
-
+      // Notifications are created server-side via notification_queue table
       fetchData();
     },
     onDelete: () => {
