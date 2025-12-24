@@ -81,21 +81,43 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       });
       fetchData();
     },
-    onUpdate: (updatedJob: any) => {
-      console.log('Job updated', updatedJob);
+    onUpdate: async (updatedJobPayload: any) => {
+      console.log('Job updated payload:', updatedJobPayload);
 
-      // Find step name from steps state
-      const stepName = steps.find(s => s.id === updatedJob.current_step_id)?.name || 'ไม่ระบุ';
+      try {
+        // Fetch the full job details from API to get the resolved step name
+        // (The payload only has IDs, but the API returns current_step_name)
+        const response = await jobService.getById(updatedJobPayload.id);
+        const fullJob = response.data || response;
 
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'info',
-        title: `อัปเดต: ${updatedJob.product_name} (${updatedJob.order_number})`,
-        text: `ขั้นตอน: ${stepName}`,
-        showConfirmButton: false,
-        timer: 4000
-      });
+        // Use the step name from the API, or fallback to the payload ID if needed
+        const stepName = fullJob.current_step_name || 'ไม่ระบุ';
+        const productName = fullJob.product_name || updatedJobPayload.product_name;
+        const orderNumber = fullJob.order_number || updatedJobPayload.order_number;
+
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'info',
+          title: `อัปเดต: ${productName} (${orderNumber})`,
+          text: `ขั้นตอน: ${stepName}`,
+          showConfirmButton: false,
+          timer: 4000
+        });
+      } catch (error) {
+        console.error('Error fetching updated job details:', error);
+        // Fallback notification if API fails
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'info',
+          title: 'มีการอัปเดตงาน',
+          showConfirmButton: false,
+          timer: 3000
+        });
+      }
+
+      // Refresh the list
       fetchData();
     },
     onDelete: () => {
