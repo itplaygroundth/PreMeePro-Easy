@@ -29,10 +29,10 @@ export async function registerForPushNotifications(): Promise<string | null> {
       return null;
     }
 
-    // 3. Register Service Worker
-    // Note: standard scope is root '/'
-    const registration = await navigator.serviceWorker.register('/sw.js');
-    console.log('✅ Service Worker registered:', registration.scope);
+    // 3. Get Service Worker Registration (PWA already registers it)
+    // Wait for service worker to be ready
+    const registration = await navigator.serviceWorker.ready;
+    console.log('✅ Service Worker ready:', registration.scope);
 
     // 4. Validate VAPID Key
     if (!VAPID_PUBLIC_KEY) {
