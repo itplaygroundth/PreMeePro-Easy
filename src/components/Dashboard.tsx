@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRealtimeSubscription } from '../hooks/useRealtimeSubscription';
+import { useNotifications } from '../hooks/useNotifications';
 import { registerForPushNotifications, savePushToken } from '../services/pushNotifications';
 import { ProductionStep, ProductionJob, User } from '../types';
 import { stepService, jobService, uploadService } from '../services/api';
@@ -8,6 +9,7 @@ import { JobDetailModal } from './JobDetailModal';
 import { BottomNavigation, TabId } from './BottomNavigation';
 import { SettingsView } from './SettingsView';
 import { ReportsView } from './ReportsView';
+import { NotificationBell, Notification } from './NotificationBell';
 import Swal from 'sweetalert2';
 import {
   Plus,
@@ -35,6 +37,16 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const [selectedJob, setSelectedJob] = useState<ProductionJob | null>(null);
   const [showJobDetail, setShowJobDetail] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
+
+  // Notification system
+  const {
+    notifications,
+    addNotification,
+    markAsRead,
+    markAllAsRead,
+    clearNotification,
+    clearAll,
+  } = useNotifications();
 
   const fetchData = useCallback(async () => {
     try {
@@ -81,19 +93,19 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     registerPush();
   }, []);
 
-  // Realtime updates for jobs
+  // Realtime updates for jobs - use notification bell instead of SweetAlert
   useRealtimeSubscription({
     table: 'pari_production_jobs',
     onInsert: (newJob: any) => {
       console.log('New job received', newJob);
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
+      addNotification({
+        type: 'job_new',
         title: `งานใหม่: ${newJob.product_name}`,
-        text: `รหัส: ${newJob.order_number}`,
-        showConfirmButton: false,
-        timer: 4000
+        message: `รหัส: ${newJob.order_number} | ลูกค้า: ${newJob.customer_name || '-'}`,
+        data: {
+          jobId: newJob.id,
+          orderNumber: newJob.order_number,
+        },
       });
       fetchData();
     },
@@ -101,39 +113,45 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       console.log('Job updated payload:', updatedJobPayload);
 
       try {
-        // Fetch the full job details from API to get the resolved step name
-        // (The payload only has IDs, but the API returns current_step_name)
         const response = await jobService.getById(updatedJobPayload.id);
         const fullJob = response.data || response;
 
-        // Use the step name from the API, or fallback to the payload ID if needed
         const stepName = fullJob.current_step_name || 'ไม่ระบุ';
         const productName = fullJob.product_name || updatedJobPayload.product_name;
         const orderNumber = fullJob.order_number || updatedJobPayload.order_number;
+        const status = fullJob.status || updatedJobPayload.status;
 
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'info',
-          title: `อัปเดต: ${productName} (${orderNumber})`,
-          text: `ขั้นตอน: ${stepName}`,
-          showConfirmButton: false,
-          timer: 4000
+        // Determine notification type based on status
+        let notifType: Notification['type'] = 'job_update';
+        if (status === 'completed') notifType = 'job_completed';
+        else if (status === 'cancelled') notifType = 'job_cancelled';
+
+        addNotification({
+          type: notifType,
+          title: status === 'completed'
+            ? `งานเสร็จสิ้น: ${productName}`
+            : status === 'cancelled'
+              ? `ยกเลิกงาน: ${productName}`
+              : `อัปเดต: ${productName}`,
+          message: status === 'completed' || status === 'cancelled'
+            ? `รหัส: ${orderNumber}`
+            : `ขั้นตอน: ${stepName} | รหัส: ${orderNumber}`,
+          data: {
+            jobId: updatedJobPayload.id,
+            orderNumber,
+            stepName,
+          },
         });
       } catch (error) {
         console.error('Error fetching updated job details:', error);
-        // Fallback notification if API fails
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'info',
+        addNotification({
+          type: 'job_update',
           title: 'มีการอัปเดตงาน',
-          showConfirmButton: false,
-          timer: 3000
+          message: 'ข้อมูลงานมีการเปลี่ยนแปลง',
+          data: { jobId: updatedJobPayload.id },
         });
       }
 
-      // Refresh the list
       fetchData();
     },
     onDelete: () => {
@@ -241,6 +259,18 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const handleCloseJobDetail = () => {
     setShowJobDetail(false);
     setSelectedJob(null);
+  };
+
+  // Handle notification click - open job detail
+  const handleNotificationClick = (notification: Notification) => {
+    if (notification.data?.jobId) {
+      const job = jobs.find((j) => j.id === notification.data?.jobId);
+      if (job) {
+        setSelectedJob(job);
+        setShowJobDetail(true);
+        setActiveTab('dashboard');
+      }
+    }
   };
 
   // Get page title based on active tab
@@ -492,6 +522,16 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-1.5 sm:gap-2">
+              {/* Notification Bell */}
+              <NotificationBell
+                notifications={notifications}
+                onMarkAsRead={markAsRead}
+                onMarkAllAsRead={markAllAsRead}
+                onClear={clearNotification}
+                onClearAll={clearAll}
+                onNotificationClick={handleNotificationClick}
+              />
+
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
