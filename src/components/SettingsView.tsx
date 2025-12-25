@@ -1,9 +1,9 @@
-import { LogOut, Info, ChevronRight, Layers, Users, Bell, Smartphone } from 'lucide-react';
+import { LogOut, Info, ChevronRight, Layers, Users, Bell, Smartphone, MessageCircle, Link2, Unlink } from 'lucide-react';
 import { User as UserType } from '../types';
 import { TemplatesView } from './TemplatesView';
 import { StaffManager } from './StaffManager';
 import { useState, useEffect } from 'react';
-import { notificationService } from '../services/api';
+import { notificationService, lineNotifyService } from '../services/api';
 import Swal from 'sweetalert2';
 
 interface SettingsViewProps {
@@ -21,11 +21,20 @@ interface TokenInfo {
   last_used: string;
 }
 
+interface LineStatus {
+  connected: boolean;
+  targetType?: string;
+  target?: string;
+}
+
 export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProps) {
   const [showTemplatesManager, setShowTemplatesManager] = useState(false);
   const [showStaffManager, setShowStaffManager] = useState(false);
   const [testingPush, setTestingPush] = useState(false);
   const [tokensInfo, setTokensInfo] = useState<{ tokensCount: number; tokens: TokenInfo[] } | null>(null);
+  const [lineStatus, setLineStatus] = useState<LineStatus | null>(null);
+  const [lineLoading, setLineLoading] = useState(false);
+  const [testingLine, setTestingLine] = useState(false);
   const displayName = user?.name || user?.email?.split('@')[0] || 'User';
   const userInitial = displayName.charAt(0).toUpperCase();
 
@@ -44,6 +53,117 @@ export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProp
     };
     fetchTokensInfo();
   }, []);
+
+  // Fetch LINE status on mount
+  useEffect(() => {
+    const fetchLineStatus = async () => {
+      try {
+        const status = await lineNotifyService.getStatus();
+        setLineStatus(status);
+      } catch (error) {
+        console.error('Failed to fetch LINE status:', error);
+      }
+    };
+    fetchLineStatus();
+  }, []);
+
+  // Connect LINE Notify
+  const handleConnectLine = async () => {
+    setLineLoading(true);
+    try {
+      const { authUrl } = await lineNotifyService.getAuthUrl();
+      // Open LINE OAuth in new window
+      window.open(authUrl, '_blank', 'width=500,height=700');
+      // User will be redirected back, we'll need to refresh status
+      Swal.fire({
+        icon: 'info',
+        title: 'เชื่อมต่อ LINE',
+        text: 'กรุณาอนุญาตในหน้าต่างที่เปิดขึ้น แล้วกลับมากดรีเฟรชสถานะ',
+        showConfirmButton: true,
+      });
+    } catch (error: any) {
+      console.error('Failed to get LINE auth URL:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'ไม่สามารถเชื่อมต่อได้',
+        text: error.response?.data?.error || error.message,
+      });
+    } finally {
+      setLineLoading(false);
+    }
+  };
+
+  // Disconnect LINE
+  const handleDisconnectLine = async () => {
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'ยกเลิกการเชื่อมต่อ LINE?',
+      text: 'คุณจะไม่ได้รับการแจ้งเตือนผ่าน LINE อีกต่อไป',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      confirmButtonText: 'ยกเลิกการเชื่อมต่อ',
+      cancelButtonText: 'ปิด',
+    });
+
+    if (result.isConfirmed) {
+      setLineLoading(true);
+      try {
+        await lineNotifyService.disconnect();
+        setLineStatus({ connected: false });
+        Swal.fire({
+          icon: 'success',
+          title: 'ยกเลิกแล้ว',
+          text: 'ยกเลิกการเชื่อมต่อ LINE สำเร็จ',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error: any) {
+        Swal.fire({
+          icon: 'error',
+          title: 'เกิดข้อผิดพลาด',
+          text: error.response?.data?.error || error.message,
+        });
+      } finally {
+        setLineLoading(false);
+      }
+    }
+  };
+
+  // Refresh LINE status
+  const refreshLineStatus = async () => {
+    setLineLoading(true);
+    try {
+      const status = await lineNotifyService.getStatus();
+      setLineStatus(status);
+    } catch (error) {
+      console.error('Failed to refresh LINE status:', error);
+    } finally {
+      setLineLoading(false);
+    }
+  };
+
+  // Test LINE notification
+  const handleTestLine = async () => {
+    setTestingLine(true);
+    try {
+      await lineNotifyService.testNotification();
+      Swal.fire({
+        icon: 'success',
+        title: 'ส่งทดสอบแล้ว',
+        text: 'ตรวจสอบการแจ้งเตือนใน LINE ของคุณ',
+        timer: 3000,
+        showConfirmButton: false,
+      });
+    } catch (error: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'ไม่สามารถส่งได้',
+        text: error.response?.data?.error || error.message,
+      });
+    } finally {
+      setTestingLine(false);
+    }
+  };
 
   // Test push notification
   const handleTestPush = async () => {
@@ -204,6 +324,119 @@ export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProp
             </div>
             <ChevronRight className="w-5 h-5 text-gray-300" />
           </button>
+        </div>
+      </div>
+
+      {/* LINE Notify Settings */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+            LINE Notify
+          </h3>
+        </div>
+
+        <div className="divide-y divide-gray-100">
+          {/* LINE Connection Status */}
+          <div className="flex items-center gap-4 px-4 py-4">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              lineStatus?.connected ? 'bg-green-100' : 'bg-gray-100'
+            }`}>
+              <MessageCircle className={`w-5 h-5 ${
+                lineStatus?.connected ? 'text-green-600' : 'text-gray-400'
+              }`} />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800">
+                {lineStatus === null ? 'กำลังโหลด...' :
+                 lineStatus.connected ? 'เชื่อมต่อแล้ว' : 'ยังไม่ได้เชื่อมต่อ'}
+              </p>
+              <p className="text-sm text-gray-400">
+                {lineStatus?.connected
+                  ? `ส่งไปยัง ${lineStatus.targetType === 'GROUP' ? 'กลุ่ม' : 'แชท'}: ${lineStatus.target || 'LINE Notify'}`
+                  : 'เชื่อมต่อเพื่อรับการแจ้งเตือนผ่าน LINE'}
+              </p>
+            </div>
+            {lineStatus?.connected && (
+              <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                Active
+              </span>
+            )}
+          </div>
+
+          {/* Connect/Disconnect Button */}
+          {lineStatus?.connected ? (
+            <>
+              {/* Test LINE Button */}
+              <button
+                onClick={handleTestLine}
+                disabled={testingLine}
+                className="w-full flex items-center gap-4 px-4 py-4 hover:bg-gray-50 transition text-left disabled:opacity-50"
+              >
+                <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                  <Bell className="w-5 h-5 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-800">
+                    {testingLine ? 'กำลังส่ง...' : 'ทดสอบ LINE Notify'}
+                  </p>
+                  <p className="text-sm text-gray-400">ส่งข้อความทดสอบไปยัง LINE</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-300" />
+              </button>
+
+              {/* Disconnect Button */}
+              <button
+                onClick={handleDisconnectLine}
+                disabled={lineLoading}
+                className="w-full flex items-center gap-4 px-4 py-4 hover:bg-red-50 transition text-left disabled:opacity-50"
+              >
+                <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                  <Unlink className="w-5 h-5 text-red-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-red-600">ยกเลิกการเชื่อมต่อ LINE</p>
+                  <p className="text-sm text-gray-400">หยุดรับการแจ้งเตือนผ่าน LINE</p>
+                </div>
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Connect Button */}
+              <button
+                onClick={handleConnectLine}
+                disabled={lineLoading}
+                className="w-full flex items-center gap-4 px-4 py-4 hover:bg-green-50 transition text-left disabled:opacity-50"
+              >
+                <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                  <Link2 className="w-5 h-5 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-green-600">
+                    {lineLoading ? 'กำลังเชื่อมต่อ...' : 'เชื่อมต่อ LINE Notify'}
+                  </p>
+                  <p className="text-sm text-gray-400">รับการแจ้งเตือนผ่าน LINE</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-300" />
+              </button>
+
+              {/* Refresh Status Button */}
+              <button
+                onClick={refreshLineStatus}
+                disabled={lineLoading}
+                className="w-full flex items-center gap-4 px-4 py-4 hover:bg-gray-50 transition text-left disabled:opacity-50"
+              >
+                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <ChevronRight className="w-5 h-5 text-blue-600 animate-spin" style={{ animationDuration: lineLoading ? '1s' : '0s' }} />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-800">
+                    {lineLoading ? 'กำลังรีเฟรช...' : 'รีเฟรชสถานะ'}
+                  </p>
+                  <p className="text-sm text-gray-400">ตรวจสอบสถานะการเชื่อมต่อใหม่</p>
+                </div>
+              </button>
+            </>
+          )}
         </div>
       </div>
 
