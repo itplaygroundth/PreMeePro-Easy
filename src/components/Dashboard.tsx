@@ -205,6 +205,54 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     fetchData();
   };
 
+  // Delete job permanently (admin only)
+  const handleDelete = async (jobId: string) => {
+    // Find the job to show its details in the confirmation
+    const jobToDelete = jobs.find((j) => j.id === jobId);
+
+    const result = await Swal.fire({
+      title: 'ลบงานถาวร?',
+      html: `
+        <div class="text-left">
+          <p class="mb-2">ต้องการลบงานนี้อย่างถาวรหรือไม่?</p>
+          <p class="text-sm text-gray-500 mb-2">รหัส: <strong>${jobToDelete?.order_number || jobId}</strong></p>
+          <p class="text-sm text-gray-500 mb-2">สินค้า: <strong>${jobToDelete?.product_name || '-'}</strong></p>
+          <p class="text-red-600 text-sm font-medium mt-3">⚠️ การลบนี้ไม่สามารถย้อนกลับได้!</p>
+          <p class="text-gray-500 text-xs mt-1">ข้อมูลทั้งหมดรวมถึงประวัติ รูปภาพ และไฟล์แนบจะถูกลบ</p>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'ลบถาวร',
+      cancelButtonText: 'ยกเลิก',
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await jobService.delete(jobId);
+      await Swal.fire({
+        icon: 'success',
+        title: 'ลบงานสำเร็จ',
+        text: `งาน ${jobToDelete?.order_number || ''} ถูกลบแล้ว`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      setSelectedJob(null);
+      setShowJobDetail(false);
+      fetchData();
+    } catch (error: any) {
+      console.error('Failed to delete job:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'ไม่สามารถลบได้',
+        text: error.response?.data?.error || error.message || 'Unknown error',
+      });
+    }
+  };
+
   // Start job - creates steps from template
   const handleStartJob = async (jobId: string) => {
     try {
@@ -554,6 +602,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
           onMoveToStep={handleMoveToStep}
           onComplete={handleComplete}
           onCancel={handleCancel}
+          onDelete={handleDelete}
           onStartJob={handleStartJob}
           onDataUpdated={fetchData}
           user={user}

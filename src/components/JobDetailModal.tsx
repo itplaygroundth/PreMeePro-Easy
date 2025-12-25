@@ -12,6 +12,7 @@ import {
   ListOrdered,
   FileText,
   Loader2,
+  Trash2,
 } from 'lucide-react';
 import { StepDetailModal } from './StepDetailModal';
 import { JobStepsManager } from './JobStepsManager';
@@ -25,6 +26,7 @@ interface JobDetailModalProps {
   onMoveToStep: (jobId: string, stepId: string) => Promise<void>;
   onComplete: (jobId: string) => Promise<void>;
   onCancel: (jobId: string) => void;
+  onDelete?: (jobId: string) => void;
   onStartJob?: (jobId: string) => Promise<void>;
   onDataUpdated?: () => void;
   user?: UserType;
@@ -38,12 +40,15 @@ export function JobDetailModal({
   onMoveToStep,
   onComplete,
   onCancel,
+  onDelete,
   onStartJob,
   onDataUpdated,
   user,
 }: JobDetailModalProps) {
   // Check if user can cancel (not staff)
   const canCancel = user?.role !== 'staff';
+  // Check if user is admin (can delete)
+  const isAdmin = user?.role === 'admin';
   const [showStepDetail, setShowStepDetail] = useState(false);
   const [showStepsManager, setShowStepsManager] = useState(false);
   const [selectedStep, setSelectedStep] = useState<ProductionStep | null>(null);
@@ -126,6 +131,14 @@ export function JobDetailModal({
     // Close modal first, then let parent (Dashboard.handleCancel) show the confirmation dialog
     onClose();
     onCancel(job.id);
+  };
+
+  const handleDelete = () => {
+    if (onDelete) {
+      // Close modal first, then let parent show the confirmation dialog
+      onClose();
+      onDelete(job.id);
+    }
   };
 
   if (!isOpen) return null;
@@ -401,12 +414,25 @@ export function JobDetailModal({
             )}
 
             {(job.status === 'completed' || job.status === 'cancelled') && (
-              <button
-                onClick={onClose}
-                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 px-4 rounded-xl font-medium transition"
-              >
-                ปิด
-              </button>
+              <div className="space-y-2">
+                <button
+                  onClick={onClose}
+                  className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 px-4 rounded-xl font-medium transition"
+                >
+                  ปิด
+                </button>
+
+                {/* Delete button - Admin only */}
+                {isAdmin && onDelete && (
+                  <button
+                    onClick={handleDelete}
+                    className="w-full bg-red-500 hover:bg-red-600 text-white py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition font-medium"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    ลบงานถาวร
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>

@@ -187,6 +187,11 @@ export const jobService = {
     const response = await api.post(`/productions-easy/jobs/${jobId}/cancel`, { reason });
     return response.data;
   },
+  // Delete job permanently (admin only, completed/cancelled jobs only)
+  delete: async (jobId: string) => {
+    const response = await api.delete(`/productions-easy/jobs/${jobId}`);
+    return response.data;
+  },
   getHistory: async (jobId: string) => {
     const response = await api.get(`/productions-easy/jobs/${jobId}/history`);
     return response.data;
@@ -266,6 +271,23 @@ export const lineOAService = {
   },
   testNotification: async () => {
     const response = await api.post('/line/test');
+    return response.data;
+  },
+};
+
+// Notification Settings (Web Push & LINE toggles)
+export const notificationSettingsService = {
+  // Get notification settings for current user
+  getSettings: async (): Promise<{
+    line: { enabled: boolean; connected: boolean };
+    webPush: { enabled: boolean; hasTokens: boolean };
+  }> => {
+    const response = await api.get('/notifications/settings');
+    return response.data;
+  },
+  // Update notification setting
+  updateSetting: async (type: 'line' | 'webPush', enabled: boolean) => {
+    const response = await api.put('/notifications/settings', { type, enabled });
     return response.data;
   },
 };

@@ -1,10 +1,37 @@
-import { LogOut, Info, ChevronRight, Layers, Users, Bell, MessageCircle, RefreshCw } from 'lucide-react';
+import { LogOut, Info, ChevronRight, Layers, Users, Bell, MessageCircle, RefreshCw, Smartphone } from 'lucide-react';
 import { User as UserType } from '../types';
 import { TemplatesView } from './TemplatesView';
 import { StaffManager } from './StaffManager';
 import { useState, useEffect } from 'react';
-import { lineOAService } from '../services/api';
+import { lineOAService, notificationSettingsService } from '../services/api';
 import Swal from 'sweetalert2';
+
+// Toggle Switch Component
+interface ToggleSwitchProps {
+  enabled: boolean;
+  onChange: (enabled: boolean) => void;
+  disabled?: boolean;
+  loading?: boolean;
+}
+
+function ToggleSwitch({ enabled, onChange, disabled, loading }: ToggleSwitchProps) {
+  return (
+    <button
+      type="button"
+      disabled={disabled || loading}
+      onClick={() => onChange(!enabled)}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+        disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+      } ${enabled ? 'bg-green-500' : 'bg-gray-300'}`}
+    >
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow ${
+          enabled ? 'translate-x-6' : 'translate-x-1'
+        } ${loading ? 'opacity-50' : ''}`}
+      />
+    </button>
+  );
+}
 
 interface SettingsViewProps {
   user: UserType;
@@ -23,19 +50,27 @@ interface LineOAStatus {
   }>;
 }
 
+interface NotificationSettings {
+  line: { enabled: boolean; connected: boolean };
+  webPush: { enabled: boolean; hasTokens: boolean };
+}
+
 export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProps) {
   const [showTemplatesManager, setShowTemplatesManager] = useState(false);
   const [showStaffManager, setShowStaffManager] = useState(false);
   const [lineStatus, setLineStatus] = useState<LineOAStatus | null>(null);
   const [lineLoading, setLineLoading] = useState(false);
   const [testingLine, setTestingLine] = useState(false);
+  const [notifySettings, setNotifySettings] = useState<NotificationSettings | null>(null);
+  const [togglingLine, setTogglingLine] = useState(false);
+  const [togglingPush, setTogglingPush] = useState(false);
   const displayName = user?.name || user?.email?.split('@')[0] || 'User';
   const userInitial = displayName.charAt(0).toUpperCase();
 
   // Check if user is admin
   const isAdmin = user?.role === 'admin';
 
-  // Fetch LINE OA status on mount
+  // Fetch LINE OA status and notification settings on mount
   useEffect(() => {
     const fetchLineStatus = async () => {
       try {
@@ -45,7 +80,16 @@ export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProp
         console.error('Failed to fetch LINE status:', error);
       }
     };
+    const fetchNotifySettings = async () => {
+      try {
+        const settings = await notificationSettingsService.getSettings();
+        setNotifySettings(settings);
+      } catch (error) {
+        console.error('Failed to fetch notification settings:', error);
+      }
+    };
     fetchLineStatus();
+    fetchNotifySettings();
   }, []);
 
   // Refresh LINE status
@@ -81,6 +125,46 @@ export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProp
       });
     } finally {
       setTestingLine(false);
+    }
+  };
+
+  // Toggle LINE notification
+  const handleToggleLine = async (enabled: boolean) => {
+    setTogglingLine(true);
+    try {
+      await notificationSettingsService.updateSetting('line', enabled);
+      setNotifySettings((prev) =>
+        prev ? { ...prev, line: { ...prev.line, enabled } } : null
+      );
+    } catch (error: any) {
+      console.error('Failed to toggle LINE:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        text: error.response?.data?.error || error.message,
+      });
+    } finally {
+      setTogglingLine(false);
+    }
+  };
+
+  // Toggle Web Push notification
+  const handleTogglePush = async (enabled: boolean) => {
+    setTogglingPush(true);
+    try {
+      await notificationSettingsService.updateSetting('webPush', enabled);
+      setNotifySettings((prev) =>
+        prev ? { ...prev, webPush: { ...prev.webPush, enabled } } : null
+      );
+    } catch (error: any) {
+      console.error('Failed to toggle Web Push:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        text: error.response?.data?.error || error.message,
+      });
+    } finally {
+      setTogglingPush(false);
     }
   };
 
@@ -165,11 +249,72 @@ export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProp
         </div>
       </div>
 
-      {/* LINE Official Account - Main Notification */}
+      {/* Notification Settings */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-4 py-3 border-b border-gray-100">
           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-            การแจ้งเตือน LINE
+            ตั้งค่าการแจ้งเตือน
+          </h3>
+        </div>
+
+        <div className="divide-y divide-gray-100">
+          {/* Web Push Toggle */}
+          <div className="flex items-center gap-4 px-4 py-4">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              notifySettings?.webPush?.enabled ? 'bg-blue-100' : 'bg-gray-100'
+            }`}>
+              <Smartphone className={`w-5 h-5 ${
+                notifySettings?.webPush?.enabled ? 'text-blue-600' : 'text-gray-400'
+              }`} />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800">Web Push</p>
+              <p className="text-sm text-gray-400">
+                {notifySettings?.webPush?.hasTokens
+                  ? 'แจ้งเตือนผ่าน Browser'
+                  : 'ยังไม่มีการลงทะเบียน'}
+              </p>
+            </div>
+            <ToggleSwitch
+              enabled={notifySettings?.webPush?.enabled ?? false}
+              onChange={handleTogglePush}
+              loading={togglingPush}
+              disabled={!notifySettings?.webPush?.hasTokens}
+            />
+          </div>
+
+          {/* LINE Toggle */}
+          <div className="flex items-center gap-4 px-4 py-4">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              notifySettings?.line?.enabled ? 'bg-green-100' : 'bg-gray-100'
+            }`}>
+              <MessageCircle className={`w-5 h-5 ${
+                notifySettings?.line?.enabled ? 'text-green-600' : 'text-gray-400'
+              }`} />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800">LINE</p>
+              <p className="text-sm text-gray-400">
+                {lineStatus?.usersCount
+                  ? `${lineStatus.usersCount} คนรับการแจ้งเตือน`
+                  : 'Add friend LINE OA เพื่อรับการแจ้งเตือน'}
+              </p>
+            </div>
+            <ToggleSwitch
+              enabled={notifySettings?.line?.enabled ?? false}
+              onChange={handleToggleLine}
+              loading={togglingLine}
+              disabled={!lineStatus?.configured}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* LINE Official Account Details */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+            LINE Official Account
           </h3>
         </div>
 
