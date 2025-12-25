@@ -77,6 +77,39 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     fetchData();
   }, [fetchData]);
 
+  // Handle deep link from URL query parameter ?job=xxx
+  useEffect(() => {
+    const handleDeepLink = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const jobId = urlParams.get('job');
+
+      if (jobId && jobs.length > 0) {
+        const targetJob = jobs.find((j) => j.id === jobId);
+        if (targetJob) {
+          setSelectedJob(targetJob);
+          setShowJobDetail(true);
+          // Clear the URL parameter after handling
+          window.history.replaceState({}, '', window.location.pathname);
+        } else {
+          // Job not found in current list, try to fetch it directly
+          try {
+            const response = await jobService.getById(jobId);
+            const jobData = response.data || response;
+            if (jobData) {
+              setSelectedJob(jobData);
+              setShowJobDetail(true);
+              window.history.replaceState({}, '', window.location.pathname);
+            }
+          } catch (error) {
+            console.error('Failed to fetch job from URL:', error);
+          }
+        }
+      }
+    };
+
+    handleDeepLink();
+  }, [jobs]);
+
   // Register for Push Notifications
   useEffect(() => {
     const registerPush = async () => {
