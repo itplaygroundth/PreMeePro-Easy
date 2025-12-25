@@ -258,18 +258,10 @@ export const notificationService = {
   },
 };
 
-// LINE Notify
-export const lineNotifyService = {
-  getAuthUrl: async () => {
-    const response = await api.get('/line/auth-url');
-    return response.data;
-  },
+// LINE Official Account
+export const lineOAService = {
   getStatus: async () => {
     const response = await api.get('/line/status');
-    return response.data;
-  },
-  disconnect: async () => {
-    const response = await api.delete('/line/disconnect');
     return response.data;
   },
   testNotification: async () => {
