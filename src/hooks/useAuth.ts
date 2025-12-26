@@ -12,6 +12,43 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check for LINE login callback
+    const handleLineCallback = () => {
+      const path = window.location.pathname;
+      if (path === '/auth/line/callback') {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+        const userParam = params.get('user');
+
+        if (token && userParam) {
+          try {
+            const user = JSON.parse(decodeURIComponent(userParam)) as User;
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            setAuthState({
+              user,
+              token,
+              isAuthenticated: true,
+            });
+            // Clean URL and redirect to home
+            window.history.replaceState({}, '', '/');
+            setLoading(false);
+            return true;
+          } catch (e) {
+            console.error('Failed to parse LINE callback:', e);
+          }
+        }
+        // Redirect to login on error
+        window.history.replaceState({}, '', '/login');
+      }
+      return false;
+    };
+
+    // Try LINE callback first
+    if (handleLineCallback()) {
+      return;
+    }
+
     // Check for stored auth
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');

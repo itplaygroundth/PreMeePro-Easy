@@ -35,6 +35,37 @@ export const authService = {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   },
+  // LINE Login
+  getLineLoginUrl: async () => {
+    const response = await api.get('/auth/line');
+    return response.data;
+  },
+  // Get pending LINE users for approval (admin only)
+  getPendingLineUsers: async () => {
+    const response = await api.get('/auth/line/pending');
+    return response.data;
+  },
+  // Approve LINE user (admin only)
+  approveLineUser: async (data: {
+    lineUserId: string;
+    role: string;
+    username: string;
+    name?: string;
+    email?: string;
+  }) => {
+    const response = await api.post('/auth/line/approve', data);
+    return response.data;
+  },
+  // Link existing user with LINE (admin only)
+  linkLineUser: async (lineUserId: string, userId: string) => {
+    const response = await api.post('/auth/line/link', { lineUserId, userId });
+    return response.data;
+  },
+  // Reject pending LINE user (admin only)
+  rejectLineUser: async (lineUserId: string) => {
+    const response = await api.delete(`/auth/line/pending/${lineUserId}`);
+    return response.data;
+  },
 };
 
 // Staff Management
