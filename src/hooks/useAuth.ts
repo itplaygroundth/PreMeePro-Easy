@@ -13,7 +13,7 @@ export function useAuth() {
 
   useEffect(() => {
     // Check for LINE login callback
-    const handleLineCallback = () => {
+    const handleLineCallback = async () => {
       const path = window.location.pathname;
       if (path === '/auth/line/callback') {
         const params = new URLSearchParams(window.location.search);
@@ -30,6 +30,18 @@ export function useAuth() {
               token,
               isAuthenticated: true,
             });
+
+            // Register for push notifications after LINE login
+            try {
+              const pushToken = await registerForPushNotifications();
+              if (pushToken) {
+                await savePushToken(pushToken);
+                localStorage.setItem('push_token', pushToken);
+              }
+            } catch (pushError) {
+              console.warn('Failed to register push notifications:', pushError);
+            }
+
             // Clean URL and redirect to home
             window.history.replaceState({}, '', '/');
             setLoading(false);
@@ -44,29 +56,33 @@ export function useAuth() {
       return false;
     };
 
-    // Try LINE callback first
-    if (handleLineCallback()) {
-      return;
-    }
-
-    // Check for stored auth
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
-
-    if (token && userStr) {
-      try {
-        const user = JSON.parse(userStr) as User;
-        setAuthState({
-          user,
-          token,
-          isAuthenticated: true,
-        });
-      } catch {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+    // Try LINE callback first (async)
+    const initAuth = async () => {
+      if (await handleLineCallback()) {
+        return;
       }
-    }
-    setLoading(false);
+
+      // Check for stored auth
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
+
+      if (token && userStr) {
+        try {
+          const user = JSON.parse(userStr) as User;
+          setAuthState({
+            user,
+            token,
+            isAuthenticated: true,
+          });
+        } catch {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      }
+      setLoading(false);
+    };
+
+    initAuth();
   }, []);
 
   const login = useCallback(async (username: string, password: string) => {
