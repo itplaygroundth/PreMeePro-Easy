@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { LogIn, Loader2, Eye, EyeOff } from 'lucide-react';
 import { authService } from '../services/api';
+import Swal from 'sweetalert2';
 
 interface LoginFormProps {
   onLogin: (username: string, password: string) => Promise<void>;
@@ -21,7 +22,6 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [lineLoading, setLineLoading] = useState(false);
-  const [error, setError] = useState('');
   const [pendingMessage, setPendingMessage] = useState('');
 
   // Check for LINE login status from URL params
@@ -36,7 +36,11 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     } else if (errorParam === 'pending_approval') {
       setPendingMessage(`สวัสดี ${name || 'คุณ'}! บัญชี LINE ของคุณกำลังรอการอนุมัติจาก Admin`);
     } else if (errorParam) {
-      setError(decodeURIComponent(errorParam));
+      Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        text: decodeURIComponent(errorParam),
+      });
     }
 
     // Clean up URL
@@ -48,24 +52,32 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   const handleLineLogin = async () => {
     try {
       setLineLoading(true);
-      setError('');
       const { loginUrl } = await authService.getLineLoginUrl();
       window.location.href = loginUrl;
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'ไม่สามารถเชื่อมต่อ LINE Login ได้');
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || err.message || 'ไม่สามารถเชื่อมต่อ LINE Login ได้';
+      Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        text: errorMessage,
+      });
       setLineLoading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
       await onLogin(username, password);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'เข้าสู่ระบบไม่สำเร็จ');
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || err.message || 'เข้าสู่ระบบไม่สำเร็จ';
+      Swal.fire({
+        icon: 'error',
+        title: 'เข้าสู่ระบบไม่สำเร็จ',
+        text: errorMessage,
+      });
     } finally {
       setLoading(false);
     }
@@ -83,12 +95,6 @@ export function LoginForm({ onLogin }: LoginFormProps) {
           {pendingMessage && (
             <div className="bg-yellow-50 text-yellow-700 p-3 rounded-lg text-xs sm:text-sm border border-yellow-200">
               {pendingMessage}
-            </div>
-          )}
-
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-xs sm:text-sm">
-              {error}
             </div>
           )}
 
