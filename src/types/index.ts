@@ -65,6 +65,7 @@ export interface User {
   name: string;
   username: string;
   role: 'admin' | 'operator' | 'staff';
+  picture_url?: string; // LINE profile picture
 }
 
 export interface AuthState {

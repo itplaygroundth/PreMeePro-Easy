@@ -194,9 +194,17 @@ export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProp
       {/* User Profile Card */}
       <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-            {userInitial}
-          </div>
+          {user?.picture_url ? (
+            <img
+              src={user.picture_url}
+              alt={displayName}
+              className="w-16 h-16 rounded-2xl object-cover shadow-lg"
+            />
+          ) : (
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+              {userInitial}
+            </div>
+          )}
           <div className="flex-1">
             <h2 className="text-lg font-bold text-gray-800">{displayName}</h2>
             <p className="text-sm text-gray-500">{user?.email || '-'}</p>

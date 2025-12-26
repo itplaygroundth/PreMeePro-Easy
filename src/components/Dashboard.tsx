@@ -572,6 +572,25 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               >
                 <RefreshCw className={`w-5 h-5 text-gray-500 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
+
+              {/* User Profile Avatar */}
+              <button
+                onClick={() => setActiveTab('settings')}
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden hover:ring-2 hover:ring-blue-300 transition active:scale-95"
+                title={user.name || user.username}
+              >
+                {user.picture_url ? (
+                  <img
+                    src={user.picture_url}
+                    alt={user.name || user.username}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                    {(user.name || user.username || 'U').charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </button>
             </div>
           </div>
         </div>
