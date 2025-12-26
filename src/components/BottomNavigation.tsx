@@ -21,7 +21,7 @@ interface BottomNavigationProps {
 
 export function BottomNavigation({ activeTab, setActiveTab }: BottomNavigationProps) {
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 z-40 safe-area-bottom">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 z-40 safe-area-bottom">
       <div className="flex items-center justify-around px-2 py-1">
         {navItems.map((item) => {
           const Icon = item.icon;

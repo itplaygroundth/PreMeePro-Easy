@@ -597,7 +597,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-4 sm:py-6 pb-24 md:pb-6">
+      <main className="max-w-7xl mx-auto px-4 py-4 sm:py-6 pb-24 lg:pb-6">
         {renderContent()}
       </main>
 
