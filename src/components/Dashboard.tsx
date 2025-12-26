@@ -548,7 +548,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               </div>
               <div>
                 <h1 className="text-base sm:text-lg font-bold text-gray-800 leading-tight">{getPageTitle()}</h1>
-                <p className="text-[10px] sm:text-xs text-gray-400 leading-tight">PreMeePro Easy</p>
+                <p className="text-[10px] sm:text-xs text-gray-400 leading-tight">SmartFab</p>
               </div>
             </div>
 

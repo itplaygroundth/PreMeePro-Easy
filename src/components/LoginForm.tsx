@@ -29,8 +29,8 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-6 sm:px-6 md:px-8">
       <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 md:p-10 w-full max-w-[90%] sm:max-w-md md:max-w-lg">
         <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">PreMeePro Easy</h1>
-          <p className="text-gray-500 mt-2 text-sm sm:text-base">ระบบจัดการการผลิต</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">SmartFab</h1>
+          <p className="text-gray-500 mt-2 text-sm sm:text-base">ระบบจัดการงานผลิตอัจฉริยะ</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 md:space-y-6">

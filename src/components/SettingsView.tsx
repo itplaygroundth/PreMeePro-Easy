@@ -419,7 +419,7 @@ export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProp
               <Info className="w-5 h-5 text-purple-600" />
             </div>
             <div className="flex-1">
-              <p className="font-medium text-gray-800">PreMeePro Easy</p>
+              <p className="font-medium text-gray-800">SmartFab</p>
               <p className="text-sm text-gray-400">เวอร์ชัน 1.0.0</p>
             </div>
           </div>
