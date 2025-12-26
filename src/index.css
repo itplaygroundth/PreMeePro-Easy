@@ -114,3 +114,18 @@
 .swal2-backdrop {
   z-index: 2147483646 !important;
 }
+
+/* Safe area for iOS devices with notch/home indicator */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Ensure bottom navigation is always visible on all screen sizes */
+.bottom-nav-fixed {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  min-height: 60px;
+}
