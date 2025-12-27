@@ -1,4 +1,4 @@
-import { LogOut, Info, ChevronRight, Layers, Users, Bell, MessageCircle, RefreshCw, Smartphone, UserPlus } from 'lucide-react';
+import { LogOut, Info, ChevronRight, Layers, Users, Bell, MessageCircle, RefreshCw, Smartphone } from 'lucide-react';
 import { User as UserType } from '../types';
 import { TemplatesView } from './TemplatesView';
 import { StaffManager } from './StaffManager';
