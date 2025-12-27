@@ -12,8 +12,7 @@ import {
   ChevronRight,
   X,
   Edit3,
-  Trash2,
-  Loader2,
+  Trash2
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
