@@ -3,7 +3,7 @@ import { useRealtimeSubscription } from '../hooks/useRealtimeSubscription';
 import { useNotifications } from '../hooks/useNotifications';
 import { registerForPushNotifications, savePushToken } from '../services/pushNotifications';
 import { ProductionStep, ProductionJob, User } from '../types';
-import { stepService, jobService, uploadService } from '../services/api';
+import { stepService, jobService, uploadService, authService } from '../services/api';
 import { NewJobModal } from './NewJobModal';
 import { JobDetailModal } from './JobDetailModal';
 import { BottomNavigation, TabId } from './BottomNavigation';
@@ -37,6 +37,10 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const [selectedJob, setSelectedJob] = useState<ProductionJob | null>(null);
   const [showJobDetail, setShowJobDetail] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
+  const [pendingApprovalCount, setPendingApprovalCount] = useState(0);
+
+  // Check if user is admin
+  const isAdmin = user?.role === 'admin';
 
   // Notification system - notifications are created server-side via notification_queue
   const {
@@ -124,6 +128,23 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     };
     registerPush();
   }, []);
+
+  // Fetch pending approval count for admin
+  useEffect(() => {
+    const fetchPendingApproval = async () => {
+      if (!isAdmin) return;
+      try {
+        const pendingUsers = await authService.getPendingLineUsers();
+        setPendingApprovalCount(pendingUsers.length);
+      } catch (error) {
+        console.error('Failed to fetch pending approval count:', error);
+      }
+    };
+    fetchPendingApproval();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchPendingApproval, 30000);
+    return () => clearInterval(interval);
+  }, [isAdmin]);
 
   // Realtime updates for jobs - just refresh data, notifications are created server-side
   useRealtimeSubscription({
@@ -601,8 +622,12 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         {renderContent()}
       </main>
 
-      {/* Bottom Navigation for Mobile */}
-      <BottomNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+      {/* Bottom Navigation */}
+      <BottomNavigation
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        pendingApprovalCount={isAdmin ? pendingApprovalCount : 0}
+      />
 
       {/* New Job Modal */}
       <NewJobModal

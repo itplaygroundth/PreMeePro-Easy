@@ -17,15 +17,17 @@ const navItems: NavItem[] = [
 interface BottomNavigationProps {
   activeTab: TabId;
   setActiveTab: (tab: TabId) => void;
+  pendingApprovalCount?: number;
 }
 
-export function BottomNavigation({ activeTab, setActiveTab }: BottomNavigationProps) {
+export function BottomNavigation({ activeTab, setActiveTab, pendingApprovalCount = 0 }: BottomNavigationProps) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]" style={{ zIndex: 9999 }}>
       <div className="flex items-center justify-around px-2 py-2 max-w-7xl mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = activeTab === item.id;
+          const showBadge = item.id === 'settings' && pendingApprovalCount > 0;
 
           return (
             <button
@@ -38,11 +40,16 @@ export function BottomNavigation({ activeTab, setActiveTab }: BottomNavigationPr
               }`}
             >
               <div
-                className={`p-1.5 rounded-xl transition-all ${
+                className={`relative p-1.5 rounded-xl transition-all ${
                   active ? 'bg-blue-100' : ''
                 }`}
               >
                 <Icon size={22} strokeWidth={active ? 2.5 : 2} />
+                {showBadge && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                    {pendingApprovalCount > 9 ? '9+' : pendingApprovalCount}
+                  </span>
+                )}
               </div>
               <span
                 className={`text-[10px] mt-0.5 font-medium ${

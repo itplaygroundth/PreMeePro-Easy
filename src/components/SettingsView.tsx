@@ -1,9 +1,9 @@
-import { LogOut, Info, ChevronRight, Layers, Users, Bell, MessageCircle, RefreshCw, Smartphone } from 'lucide-react';
+import { LogOut, Info, ChevronRight, Layers, Users, Bell, MessageCircle, RefreshCw, Smartphone, UserPlus } from 'lucide-react';
 import { User as UserType } from '../types';
 import { TemplatesView } from './TemplatesView';
 import { StaffManager } from './StaffManager';
 import { useState, useEffect } from 'react';
-import { lineOAService, notificationSettingsService } from '../services/api';
+import { lineOAService, notificationSettingsService, authService } from '../services/api';
 import Swal from 'sweetalert2';
 
 // Toggle Switch Component
@@ -64,6 +64,7 @@ export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProp
   const [notifySettings, setNotifySettings] = useState<NotificationSettings | null>(null);
   const [togglingLine, setTogglingLine] = useState(false);
   const [togglingPush, setTogglingPush] = useState(false);
+  const [pendingUsersCount, setPendingUsersCount] = useState(0);
   const displayName = user?.name || user?.email?.split('@')[0] || 'User';
   const userInitial = displayName.charAt(0).toUpperCase();
 
@@ -88,9 +89,19 @@ export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProp
         console.error('Failed to fetch notification settings:', error);
       }
     };
+    const fetchPendingUsers = async () => {
+      if (!isAdmin) return;
+      try {
+        const pendingUsers = await authService.getPendingLineUsers();
+        setPendingUsersCount(pendingUsers.length);
+      } catch (error) {
+        console.error('Failed to fetch pending users:', error);
+      }
+    };
     fetchLineStatus();
     fetchNotifySettings();
-  }, []);
+    fetchPendingUsers();
+  }, [isAdmin]);
 
   // Refresh LINE status
   const refreshLineStatus = async () => {
@@ -244,12 +255,21 @@ export function SettingsView({ user, onLogout, onDataChanged }: SettingsViewProp
               onClick={() => setShowStaffManager(true)}
               className="w-full flex items-center gap-4 px-4 py-4 hover:bg-gray-50 transition text-left"
             >
-              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center relative">
                 <Users className="w-5 h-5 text-blue-600" />
+                {pendingUsersCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                    {pendingUsersCount}
+                  </span>
+                )}
               </div>
               <div className="flex-1">
                 <p className="font-medium text-gray-800">จัดการพนักงาน</p>
-                <p className="text-sm text-gray-400">เพิ่ม แก้ไข หรือลบพนักงาน</p>
+                <p className="text-sm text-gray-400">
+                  {pendingUsersCount > 0
+                    ? <span className="text-orange-500 font-medium">{pendingUsersCount} คนรออนุมัติ</span>
+                    : 'เพิ่ม แก้ไข หรือลบพนักงาน'}
+                </p>
               </div>
               <ChevronRight className="w-5 h-5 text-gray-300" />
             </button>
