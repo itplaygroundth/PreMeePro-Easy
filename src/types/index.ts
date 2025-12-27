@@ -122,3 +122,24 @@ export interface JobStep {
   created_at: string;
   updated_at: string;
 }
+
+// Stock/Product types
+export interface Product {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  category?: string;
+  stock_quantity: number;
+  sizes?: string[];
+  colors?: string[];
+  is_rentable?: boolean;
+  rent_price_per_day?: number;
+  late_fee?: number;
+  sku?: string;
+  image_1?: string;
+  image_2?: string;
+  image_3?: string;
+  created_at: string;
+  updated_at?: string;
+}

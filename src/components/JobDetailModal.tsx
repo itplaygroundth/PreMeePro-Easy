@@ -13,10 +13,12 @@ import {
   FileText,
   Loader2,
   Trash2,
+  BoxIcon,
 } from 'lucide-react';
 import { StepDetailModal } from './StepDetailModal';
 import { JobStepsManager } from './JobStepsManager';
-import { jobService } from '../services/api';
+import { jobService, stockService } from '../services/api';
+import Swal from 'sweetalert2';
 
 interface JobDetailModalProps {
   isOpen: boolean;
@@ -55,6 +57,7 @@ export function JobDetailModal({
   const [isStepReadOnly, setIsStepReadOnly] = useState(false);
   const [jobSteps, setJobSteps] = useState<ProductionStep[]>([]);
   const [loadingSteps, setLoadingSteps] = useState(false);
+  const [addingToStock, setAddingToStock] = useState(false);
 
   // Use job-specific steps when available, otherwise use template steps
   const activeSteps = jobSteps.length > 0 ? jobSteps : steps;
@@ -138,6 +141,83 @@ export function JobDetailModal({
       // Close modal first, then let parent show the confirmation dialog
       onClose();
       onDelete(job.id);
+    }
+  };
+
+  // Handle add to stock
+  const handleAddToStock = async () => {
+    const result = await Swal.fire({
+      title: 'โอนเข้าสต๊อก',
+      html: `
+        <div class="text-left text-sm">
+          <p class="mb-2">ต้องการโอนงานนี้เข้าสต๊อกสินค้าหรือไม่?</p>
+          <div class="bg-gray-100 p-3 rounded-lg mb-3">
+            <p><strong>สินค้า:</strong> ${job.product_name}</p>
+            <p><strong>จำนวน:</strong> ${job.quantity} ชิ้น</p>
+            <p><strong>ลูกค้า:</strong> ${job.customer_name}</p>
+          </div>
+          <div class="mb-2">
+            <label class="block text-gray-700 mb-1">ราคาขาย (บาท):</label>
+            <input type="number" id="swal-price" class="w-full p-2 border rounded" placeholder="0" min="0">
+          </div>
+          <div class="mb-2">
+            <label class="block text-gray-700 mb-1">หมวดหมู่:</label>
+            <input type="text" id="swal-category" class="w-full p-2 border rounded" placeholder="เช่น ชุดไทย, ชุดเจ้าสาว">
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="swal-rentable" checked>
+            <label for="swal-rentable">สามารถให้เช่าได้</label>
+          </div>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'โอนเข้าสต๊อก',
+      cancelButtonText: 'ยกเลิก',
+      preConfirm: () => {
+        const price = (document.getElementById('swal-price') as HTMLInputElement)?.value;
+        const category = (document.getElementById('swal-category') as HTMLInputElement)?.value;
+        const isRentable = (document.getElementById('swal-rentable') as HTMLInputElement)?.checked;
+        return {
+          price: price ? parseFloat(price) : 0,
+          category: category || undefined,
+          is_rentable: isRentable,
+        };
+      },
+    });
+
+    if (!result.isConfirmed) return;
+
+    setAddingToStock(true);
+    try {
+      await stockService.addJobToStock(job.id, {
+        name: job.product_name,
+        price: result.value?.price || 0,
+        category: result.value?.category,
+        is_rentable: result.value?.is_rentable,
+      });
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'โอนเข้าสต๊อกสำเร็จ',
+        text: `${job.product_name} ถูกเพิ่มเข้าสต๊อกแล้ว`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      onDataUpdated?.();
+      onClose();
+    } catch (error: any) {
+      console.error('Failed to add to stock:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'ไม่สามารถโอนเข้าสต๊อกได้',
+        text: error.response?.data?.error || error.message || 'Unknown error',
+      });
+    } finally {
+      setAddingToStock(false);
     }
   };
 
@@ -415,6 +495,27 @@ export function JobDetailModal({
 
             {(job.status === 'completed' || job.status === 'cancelled') && (
               <div className="space-y-2">
+                {/* Add to Stock button - For completed jobs only */}
+                {job.status === 'completed' && (
+                  <button
+                    onClick={handleAddToStock}
+                    disabled={addingToStock}
+                    className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all font-medium shadow-lg shadow-green-200 disabled:opacity-50"
+                  >
+                    {addingToStock ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        กำลังโอน...
+                      </>
+                    ) : (
+                      <>
+                        <BoxIcon className="w-5 h-5" />
+                        โอนเข้าสต๊อก
+                      </>
+                    )}
+                  </button>
+                )}
+
                 <button
                   onClick={onClose}
                   className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 px-4 rounded-xl font-medium transition"

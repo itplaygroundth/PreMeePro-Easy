@@ -440,6 +440,83 @@ export const shippingService = {
   },
 };
 
+// Stock/Products Service
+export const stockService = {
+  // Get all products
+  getAll: async () => {
+    const response = await api.get('/products');
+    return response.data;
+  },
+  // Get product by ID
+  getById: async (id: string) => {
+    const response = await api.get(`/products/${id}`);
+    return response.data;
+  },
+  // Create new product
+  create: async (data: {
+    name: string;
+    description?: string;
+    price: number;
+    category?: string;
+    stock_quantity: number;
+    sizes?: string[];
+    colors?: string[];
+    is_rentable?: boolean;
+    rent_price_per_day?: number;
+    sku?: string;
+  }) => {
+    const response = await api.post('/products', data);
+    return response.data;
+  },
+  // Update product
+  update: async (id: string, data: {
+    name?: string;
+    description?: string;
+    price?: number;
+    category?: string;
+    stock_quantity?: number;
+    sizes?: string[];
+    colors?: string[];
+    is_rentable?: boolean;
+    rent_price_per_day?: number;
+  }) => {
+    const response = await api.put(`/products/${id}`, data);
+    return response.data;
+  },
+  // Delete product
+  delete: async (id: string) => {
+    const response = await api.delete(`/products/${id}`);
+    return response.data;
+  },
+  // Search products
+  search: async (params: {
+    q?: string;
+    category?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    isRentable?: boolean;
+  }) => {
+    const response = await api.get('/products/search', { params });
+    return response.data;
+  },
+  // Add job to stock (convert completed job to product)
+  addJobToStock: async (jobId: string, data?: {
+    name?: string;
+    price?: number;
+    category?: string;
+    is_rentable?: boolean;
+    rent_price_per_day?: number;
+  }) => {
+    const response = await api.post(`/productions-easy/jobs/${jobId}/add-to-stock`, data);
+    return response.data;
+  },
+  // Get jobs awaiting stock
+  getAwaitingStock: async () => {
+    const response = await api.get('/productions-easy/jobs/awaiting-stock');
+    return response.data;
+  },
+};
+
 // Upload Service - upload images to storage (same as BrideParish)
 export const uploadService = {
   /**

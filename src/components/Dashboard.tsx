@@ -9,6 +9,7 @@ import { JobDetailModal } from './JobDetailModal';
 import { BottomNavigation, TabId } from './BottomNavigation';
 import { SettingsView } from './SettingsView';
 import { ReportsView } from './ReportsView';
+import { StockView } from './StockView';
 import { NotificationBell, Notification } from './NotificationBell';
 import Swal from 'sweetalert2';
 import {
@@ -330,6 +331,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const getPageTitle = () => {
     const titles: Record<TabId, string> = {
       dashboard: 'งานทั้งหมด',
+      stock: 'สินค้าคงคลัง',
       reports: 'รายงาน',
       settings: 'ตั้งค่า',
     };
@@ -358,6 +360,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             onDataChanged={fetchData}
           />
         );
+      case 'stock':
+        return <StockView onDataChanged={fetchData} />;
       case 'reports':
         return <ReportsView jobs={jobs} />;
       case 'dashboard':

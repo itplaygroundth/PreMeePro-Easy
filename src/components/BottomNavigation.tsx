@@ -1,6 +1,6 @@
-import { Package, BarChart3, Settings, LucideIcon } from 'lucide-react';
+import { Package, BarChart3, Settings, Boxes, LucideIcon } from 'lucide-react';
 
-export type TabId = 'dashboard' | 'reports' | 'settings';
+export type TabId = 'dashboard' | 'stock' | 'reports' | 'settings';
 
 interface NavItem {
   id: TabId;
@@ -10,6 +10,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { id: 'dashboard', label: 'งาน', icon: Package },
+  { id: 'stock', label: 'สต๊อก', icon: Boxes },
   { id: 'reports', label: 'รายงาน', icon: BarChart3 },
   { id: 'settings', label: 'ตั้งค่า', icon: Settings },
 ];
