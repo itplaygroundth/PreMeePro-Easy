@@ -10,6 +10,7 @@ export function useAuth() {
     isAuthenticated: false,
   });
   const [loading, setLoading] = useState(true);
+  const [isNewLineLogin, setIsNewLineLogin] = useState(false);
 
   useEffect(() => {
     // Check for LINE login callback
@@ -40,6 +41,12 @@ export function useAuth() {
               }
             } catch (pushError) {
               console.warn('Failed to register push notifications:', pushError);
+            }
+
+            // Check if should show LINE OA prompt (only if not dismissed before)
+            const promptDismissed = localStorage.getItem('lineOAPromptDismissed');
+            if (!promptDismissed) {
+              setIsNewLineLogin(true);
             }
 
             // Clean URL and redirect to home
@@ -142,10 +149,16 @@ export function useAuth() {
     });
   }, []);
 
+  const clearNewLineLogin = useCallback(() => {
+    setIsNewLineLogin(false);
+  }, []);
+
   return {
     ...authState,
     loading,
     login: loginWithPush,
     logout,
+    isNewLineLogin,
+    clearNewLineLogin,
   };
 }

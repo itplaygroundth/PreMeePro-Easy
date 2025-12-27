@@ -1,10 +1,11 @@
 import { useAuth } from './hooks/useAuth';
 import { LoginForm } from './components/LoginForm';
 import { Dashboard } from './components/Dashboard';
+import { AddLineOAPrompt } from './components/AddLineOAPrompt';
 import { RefreshCw } from 'lucide-react';
 
 function App() {
-  const { user, isAuthenticated, loading, login, logout } = useAuth();
+  const { user, isAuthenticated, loading, login, logout, isNewLineLogin, clearNewLineLogin } = useAuth();
 
   if (loading) {
     return (
@@ -18,7 +19,18 @@ function App() {
     return <LoginForm onLogin={login} />;
   }
 
-  return <Dashboard user={user} onLogout={logout} />;
+  return (
+    <>
+      <Dashboard user={user} onLogout={logout} />
+
+      {/* Show LINE OA add friend prompt after LINE Login */}
+      <AddLineOAPrompt
+        isOpen={isNewLineLogin}
+        onClose={clearNewLineLogin}
+        onSkip={clearNewLineLogin}
+      />
+    </>
+  );
 }
 
 export default App;

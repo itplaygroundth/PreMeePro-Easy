@@ -304,6 +304,16 @@ export const lineOAService = {
     const response = await api.post('/line/test');
     return response.data;
   },
+  // Get LINE OA info for friend add link (no auth required)
+  getInfo: async (): Promise<{
+    configured: boolean;
+    basicId: string | null;
+    channelId: string | null;
+    friendUrl: string;
+  }> => {
+    const response = await api.get('/line/info');
+    return response.data;
+  },
 };
 
 // Notification Settings (Web Push & LINE toggles)
