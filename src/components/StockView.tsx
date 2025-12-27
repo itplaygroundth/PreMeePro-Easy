@@ -276,7 +276,7 @@ export function StockView({ onDataChanged }: StockViewProps) {
 
       {/* Product Detail Modal */}
       {selectedProduct && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center" style={{ zIndex: 10000 }}>
           <div className="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-3xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
             {/* Header */}
             <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-start">
@@ -379,7 +379,7 @@ export function StockView({ onDataChanged }: StockViewProps) {
             </div>
 
             {/* Footer Actions */}
-            <div className="px-5 py-4 border-t border-gray-100 bg-gray-50 space-y-2">
+            <div className="px-5 pt-4 pb-6 sm:pb-4 border-t border-gray-100 bg-gray-50 space-y-2">
               <button
                 onClick={() => handleUpdateStock(selectedProduct)}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition font-medium"

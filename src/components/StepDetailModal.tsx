@@ -415,7 +415,7 @@ export function StepDetailModal({ isOpen, onClose, job, step, onSaved, isReadOnl
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" style={{ zIndex: 10001 }}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className={`px-6 py-4 border-b border-gray-100 ${isReadOnly ? 'bg-gradient-to-r from-gray-50 to-slate-50' : 'bg-gradient-to-r from-blue-50 to-indigo-50'}`}>

@@ -237,7 +237,7 @@ export function JobDetailModal({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center" style={{ zIndex: 10000 }}>
         <div className="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-3xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
           {/* Color Strip */}
           <div className={`h-2 bg-gradient-to-r ${status.gradient}`} />
@@ -441,7 +441,7 @@ export function JobDetailModal({
           </div>
 
           {/* Footer Actions */}
-          <div className="px-5 py-4 border-t border-gray-100 bg-gray-50 space-y-3">
+          <div className="px-5 pt-4 pb-6 sm:pb-4 border-t border-gray-100 bg-gray-50 space-y-3">
             {job.status === 'pending' && (
               <button
                 onClick={async () => {

@@ -483,7 +483,7 @@ export function StaffManager({ onBack }: StaffManagerProps) {
 
             {/* LINE User Approve Modal */}
             {showApproveForm && selectedLineUser && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" style={{ zIndex: 10000 }}>
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
                         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-green-50">
                             <div className="flex items-center gap-3">
@@ -586,7 +586,7 @@ export function StaffManager({ onBack }: StaffManagerProps) {
 
             {/* Add/Edit Modal */}
             {showForm && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" style={{ zIndex: 10000 }}>
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
                         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                             <h3 className="font-bold text-lg text-gray-800">
